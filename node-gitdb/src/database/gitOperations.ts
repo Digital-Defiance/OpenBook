@@ -60,11 +60,11 @@ export class GitOperations {
 
         console.log(`Ensuring mountpoint exists at mountpoint: ${this.mountPoint}`);
         if (existsSync(this.mountPoint)) {
-            console.log("[ ready ] Mountpoint exists");
+            console.log("Mountpoint exists");
         } else {
             const mountpointParent = dirname(this.mountPoint);
             if (!existsSync(mountpointParent)) {
-                console.log("[ ready ] Mountpoint parent does not exist, creating");
+                console.log("Mountpoint parent does not exist, creating");
                 mkdirSync(mountpointParent, { recursive: true });
             }
             console.log(`Cloning repo from: ${this.repo} into mountpoint: ${this.mountPoint}`);

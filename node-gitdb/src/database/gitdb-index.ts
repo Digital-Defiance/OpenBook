@@ -197,7 +197,7 @@ export class GitDBIndex {
         console.log("Updating indicies and writing revision");
         const changes = await this.determineIndexChanges();
         console.log(`Changes: ${changes.join(', ')}`);
-        this.updateIndicies(changes);
+        await this.updateIndicies(changes);
         await this.writeIndexRevision();
     }
 }
