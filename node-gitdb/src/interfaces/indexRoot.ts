@@ -1,4 +1,5 @@
 export interface IIndexRoot {
-    hash: string;
+    database: string;
+    last_index: string;
     version: string;
 }

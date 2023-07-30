@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { IEnvironment } from "./interfaces/environment";
 
 export const environment: IEnvironment = {
@@ -5,10 +6,16 @@ export const environment: IEnvironment = {
     host: process.env.HOST ?? 'localhost',
     port: Number(process.env.PORT ?? 3000),
     database: {
-        mountpoint: process.env.DATABASE_MOUNTPOINT ?? '/tmp/node-gitdb',
+        mountPoint: process.env.DATABASE_MOUNTPOINT ?? '/tmp/node-gitdb',
         repo: process.env.DATABASE_REPO ?? '',
         branch: process.env.DATABASE_BRANCH ?? 'main',
         path: process.env.DATABASE_PATH ?? '/'
+    },
+    index: {
+        mountPoint: process.env.INDEX_MOUNTPOINT ?? '/tmp/node-gitdb-index',
+        repo: process.env.INDEX_REPO ?? '',
+        branch: process.env.INDEX_BRANCH ?? 'main',
+        path: process.env.INDEX_PATH ?? '/'
     }
 };
 

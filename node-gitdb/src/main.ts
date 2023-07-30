@@ -1,18 +1,12 @@
 import express from 'express';
-import 'dotenv/config';
-
 import queryRouter from './routers/query';
-import { ensureCheckedOutLatest } from './database/git';
-import { updateIndiciesAndWriteRevision } from './database/indexing';
-import { getTables } from './database/tables';
 import { environment } from './environment';
+import { GitDB } from './database/gitdb';
 
 (async function() {
     try {
-        await ensureCheckedOutLatest();
-        const tables = getTables();
-        console.log(`[ ready ] Tables: ${tables.join(', ')}`);
-        await updateIndiciesAndWriteRevision();
+        const gitDb = await GitDB.new();
+        await gitDb.index.updateIndiciesAndWriteRevision();
         const app = express();
 
         app.use(express.json());

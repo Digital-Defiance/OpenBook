@@ -1,6 +1,6 @@
 # node-gitdb
 
-Node-GitDB is an experimental filesystem/database that intends to provide NOSQL-like functionality in a semi human-readable format.
+Node-GitDB is an experimental filesystem/database that intends to provide NOSQL-like functionality in a semi human-readable format. It is not designed for huge databases- is intended for relatively small (hundreds or thousands of records) databases, such as member lists, or other small datasets. It is limited by the filesystem, its speed, and the additional overhead of git and parsing markdown.
 
 It includes support for encryption of some fields, and is designed to be Markdown friendly, although users do need to be careful about the format of their data.
 
@@ -13,7 +13,7 @@ Node-GitDB seeks to be a way for similar organizations to manage their membershi
 
 ## Mechanism of action
 
-I think the plan is to index a given commit's changed files into MongoDB which will track the filesystem state and help spot differences. Perhaps a git client hook could build the indexes and commit them with the data. I am wondering about mirroring the data into Mongo.
+We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately.
 
 ## Format
 
@@ -25,57 +25,30 @@ See [Record Format](docs/Record%20Format.md) for more information on the format.
 
 ## Directory Structure
 
-Directory structure is critical to the functionality of Node-GitDB. The directory structure is as follows:
-
-```
-- root
-  - table
-    - record
-      - subrecord
-      - subrecord
-    - record
-      - subrecord
-      - subrecord
-  - table
-    - record
-      - subrecord
-      - subrecord
-    - record
-      - subrecord
-      - subrecord
-```
-
+Directory structure is critical to the functionality of Node-GitDB. 
+Each table is housed within its own directory, and each record is a markdown file within that directory.
+Tables/directories can not be nested.
 Further nesting is achieved within the markdown itself.
-For example if the above markdown from the Format section was in table/record/subrecord we should be able to query `Table.Record.Subrecord.Record.Subrecord` and get the value `Value`.
 
-Conflicts in subrecords go to the directory structure first if such a case arises.
+See [Directory Structure](docs/Directory%20Structure.md) for more information on the directory structure.
 
 ## Queries
 
 Queries will be done with JSON via REST in a manner reminiscent of MongoDB. Queries will specify the expected formatting of the data and any casting, which will keep that clutter out of the data.
 
-### Basic Structure
+See [Querying](docs/Querying.md) for more information on querying.
 
-Queries in Node-GitDB are expressed as JSON objects, similar to MongoDB. 
+### Setup
 
-A basic query structure is as follows:
+- Create or locate an existing git repository containing your data. It must be formatted and placed as above in order to be parsed correctly.
+- Create or locate an existing git repository containing your index. It must contain the index.json file.
+- If the repositories are to start empty, you must manually create an initial commit that is empty or has a .dotfile in it. 
+  - It should be possible, but not recommended, to have the data and index in the same repository under separate branches.
+  - It is not tested to have the index and the data in the same branch.
+  - If you were going to try it, it would have to be in a path with a .dotted name and add that to the .gitignore. Your mileage may vary, a lot.
 
-```json
-{
-    "path": "Table.Record.Subrecord",
-    "filter": {},
-    "cast": {}
-}
-```
-
-The three main components are `path`, `filter`, and `cast`.
-
-- `path`: The path to the data you are querying. Paths are dot-delimited strings that specify the route to the desired data following the directory structure of Node-GitDB.
-- `filter`: This is an optional JSON object that can be used to further filter the data retrieved by the query.
-- `cast`: This optional field specifies the data type to which the results should be cast.
-
-
-See [Querying.md](docs/Querying.md) for more information on queries.
+Copy .env.example to .env and fill in the values.
+There are options to locate the date at a subdirectory within each of the repositories.
 
 ## TODO
 * Support querying of basic markdown data
