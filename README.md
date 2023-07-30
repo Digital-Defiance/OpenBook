@@ -13,7 +13,9 @@ Node-GitDB seeks to be a way for similar organizations to manage their membershi
 
 ## Mechanism of action
 
-We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately.
+We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately. We will use 'remark' and 'remark-gfm' to parse the markdown at index time, and produce a collection of parsed markdown files, ready to query. This map will constitute the 'database'.
+
+From there we will build mongo-like mechanisms to query the data.
 
 ## Format
 
