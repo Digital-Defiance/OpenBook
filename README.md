@@ -56,6 +56,10 @@ See [Querying](docs/Querying.md) for more information on querying.
 Copy .env.example to .env and fill in the values.
 There are options to locate the date at a subdirectory within each of the repositories.
 
+## Complete
+* Basic git cloning of data and index repositories
+* Basic indexing into a collection of remark Node objects
+
 ## TODO
 * Support querying of basic markdown data
 * Support storing basic markdown data through query
