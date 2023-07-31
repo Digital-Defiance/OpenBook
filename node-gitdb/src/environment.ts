@@ -15,6 +15,11 @@ export const environment: IEnvironment = {
         file: process.env.INDEX_FILE ?? 'index.json',
         path: process.env.INDEX_PATH ?? '/.gitdb-index',
     },
+    mongo: {
+        uri: process.env.MONGO_URI ?? 'mongodb://localhost:27017',
+        dbName: process.env.MONGO_DBNAME ?? 'node-gitdb',
+        collectionName: process.env.MONGO_COLLECTION ?? 'gitdb',
+    }
 };
 
 if (environment.production) {

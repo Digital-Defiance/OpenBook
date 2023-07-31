@@ -3,19 +3,23 @@ import { join } from 'path';
 import { GitOperations } from './gitOperations';
 import { GitDBIndex } from './gitdb-index';
 import { environment } from '../environment';
+import { MongoConnector } from './mongo';
 
 export class GitDB {
   public readonly gitDatabase: GitOperations;
   public readonly index: GitDBIndex;
+  public readonly mongo: MongoConnector;
 
   constructor(gitDatabase: GitOperations) {
     this.gitDatabase = gitDatabase;
     this.index = new GitDBIndex(this);
+    this.mongo = new MongoConnector(environment.mongo.uri, environment.mongo.dbName);
   }
 
   public async init() {
     await this.gitDatabase.ensureCheckedOutLatest();
     await this.index.init();
+    await this.mongo.connect();
   }
 
   /**

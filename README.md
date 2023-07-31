@@ -17,9 +17,7 @@ Node-GitDB seeks to be a way for similar organizations to manage their membershi
 
 ## Mechanism of action
 
-We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately. We will use 'remark' and 'remark-gfm' to parse the markdown at index time, and produce a collection of parsed markdown files, ready to query. This map will constitute the 'database'.
-
-From there we will build mongo-like mechanisms to query the data.
+We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately. We will use 'remark' and 'remark-gfm' to parse the markdown at index time, and produce a collection of parsed markdown files, ready to query. This map will constitute the 'database'. We will then insert/upsert all the documents into mongo for easy querying. The mongo is continually refreshed by the git repository, and at the moment this is mostly a wipe and reinsert process, but in the future we will be smarter. We will then build an API for querying the MongoDB.
 
 ## Format
 
@@ -47,11 +45,7 @@ See [Querying](docs/Querying.md) for more information on querying.
 ### Setup
 
 - Create or locate an existing git repository containing your data. It must be formatted and placed as above in order to be parsed correctly.
-- Create or locate an existing git repository containing your index. It must contain the index.json file.
-- If the repositories are to start empty, you must manually create an initial commit that is empty or has a .dotfile in it. 
-  - It should be possible, but not recommended, to have the data and index in the same repository under separate branches.
-  - It is not tested to have the index and the data in the same branch.
-  - If you were going to try it, it would have to be in a path with a .dotted name and add that to the .gitignore. Your mileage may vary, a lot.
+- If the repository is to start empty, you must manually create an initial commit that is empty or has a .dotfile in it. 
 
 Copy .env.example to .env and fill in the values.
 There are options to locate the date at a subdirectory within each of the repositories.
@@ -60,8 +54,12 @@ There are options to locate the date at a subdirectory within each of the reposi
 * Basic git cloning of data and index repositories
 * Basic indexing into a collection of remark Node objects
 
+## In Progress
+* Support inserting the index data into mongo
+
 ## TODO
-* Support querying of basic markdown data
+* Support querying of basic markdown data through mongo
+* Support querying/updating through REST API
 * Support storing basic markdown data through query
 * Support encryption of data
 * Support Git WebHooks to notify Node-GitDB of changes

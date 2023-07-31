@@ -9,4 +9,9 @@ export interface IEnvironment {
         file: string;    
         path: string;
     }
+    mongo: {
+        uri: string;
+        dbName: string;
+        collectionName: string;
+    }
 }
