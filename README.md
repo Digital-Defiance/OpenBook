@@ -1,5 +1,9 @@
 # node-gitdb
 
+Note: Node-GitDB is in pre-alpha, and is not only incomplete and undergoing development, but also should not be trusted with data.
+
+-----
+
 Node-GitDB is an experimental filesystem/database that intends to provide NOSQL-like functionality in a semi human-readable format. It is not designed for huge databases- is intended for relatively small (hundreds or thousands of records) databases, such as member lists, or other small datasets. It is limited by the filesystem, its speed, and the additional overhead of git and parsing markdown.
 
 It includes support for encryption of some fields, and is designed to be Markdown friendly, although users do need to be careful about the format of their data.
