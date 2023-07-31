@@ -77,6 +77,7 @@ export class GitOperations {
         const gitInstance = simpleGit();
         const result = await gitInstance.clone(this.repo, this.mountPoint, {
           '--branch': this.branch,
+          '--recursive': null, // Added this line to enable recursive cloning
         });
         console.log(result);
 

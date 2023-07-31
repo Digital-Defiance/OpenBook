@@ -1,6 +1,10 @@
 import { Root } from 'mdast';
 import { FrozenProcessor } from 'unified';
 
+/**
+ * Modeled after https://github.com/remarkjs/remark/blob/main/packages/remark/index.js
+ * @returns a remark processor that can be used to parse markdown
+ */
 export async function getRemark(): Promise<
   FrozenProcessor<Root, Root, Root, string>
 > {
