@@ -5,5 +5,8 @@ export interface IEnvironment {
     host: string;
     port: number;
     database: IGitOperations;
-    indexPath: string;
+    index: {
+        file: string;    
+        path: string;
+    }
 }

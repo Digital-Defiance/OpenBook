@@ -18,7 +18,7 @@ import { environment } from '../environment';
 export class GitDBIndex {
   public readonly gitDB: GitDB;
   public static readonly indexingVersion = '0.0.0';
-  public static readonly indexFile = 'index.json';
+  public readonly indexFile: string;
   public readonly indexPath: string;
   public readonly fullIndexPath: string;
   public readonly fullIndexFilePath: string;
@@ -26,9 +26,10 @@ export class GitDBIndex {
 
   constructor(gitDb: GitDB) {
     this.gitDB = gitDb;
-    this.indexPath = environment.indexPath;
+    this.indexFile = environment.index.file;
+    this.indexPath = environment.index.path;
     this.fullIndexPath = join(this.gitDB.gitDatabase.mountPoint, this.indexPath);
-    this.fullIndexFilePath = join(this.fullIndexPath, GitDBIndex.indexFile);
+    this.fullIndexFilePath = join(this.fullIndexPath, this.indexFile);
   }
 
   public async init(): Promise<void> {
@@ -97,7 +98,7 @@ export class GitDBIndex {
       return false;
     }
     const tablePath = join(this.fullIndexPath, table);
-    const tableFilePath = join(tablePath, GitDBIndex.indexFile);
+    const tableFilePath = join(tablePath, this.indexFile);
     if (!existsSync(tableFilePath)) {
       return false;
     }
@@ -182,7 +183,7 @@ export class GitDBIndex {
     }
 
     // Write the records and hash for the table to a file in the index
-    const indexTableFilePath = join(indexTablePath, GitDBIndex.indexFile);
+    const indexTableFilePath = join(indexTablePath, this.indexFile);
     const data: IIndexRecord = { records, hash };
     writeFileSync(indexTableFilePath, JSON.stringify(data));
   }

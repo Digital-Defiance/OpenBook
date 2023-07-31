@@ -11,7 +11,10 @@ export const environment: IEnvironment = {
         branch: process.env.DATABASE_BRANCH ?? 'main',
         path: process.env.DATABASE_PATH ?? '/',
     },
-    indexPath: process.env.INDEX_PATH ?? '/.gitdb-index',
+    index: {
+        file: process.env.INDEX_FILE ?? 'index.json',
+        path: process.env.INDEX_PATH ?? '/.gitdb-index',
+    },
 };
 
 if (environment.production) {
