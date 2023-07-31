@@ -8,6 +8,7 @@ export const environment: IEnvironment = {
     database: {
         mountPoint: process.env.DATABASE_MOUNTPOINT ?? '/tmp/node-gitdb',
         repo: process.env.DATABASE_REPO ?? '',
+        repoRecursive: process.env.DATABASE_REPO_RECURSIVE === 'true',
         branch: process.env.DATABASE_BRANCH ?? 'main',
         path: process.env.DATABASE_PATH ?? '/',
     },

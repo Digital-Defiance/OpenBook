@@ -12,6 +12,7 @@ export class GitOperations {
   public readonly mountParent: string;
   public readonly relativePath: string;
   public readonly repo: string;
+  public readonly repoRecursive: boolean;
 
   constructor(config: IGitOperations) {
     this.branch = config.branch;
@@ -22,6 +23,7 @@ export class GitOperations {
     this.mountParent = dirname(this.mountPoint);
     this.relativePath = config.path;
     this.repo = config.repo;
+    this.repoRecursive = config.repoRecursive;
 
     if (!existsSync(this.mountParent)) {
       throw new Error('Mountpoint parent does not exist');
@@ -75,10 +77,14 @@ export class GitOperations {
       );
       try {
         const gitInstance = simpleGit();
-        const result = await gitInstance.clone(this.repo, this.mountPoint, {
-          '--branch': this.branch,
-          '--recursive': null, // Added this line to enable recursive cloning
-        });
+        const cloneArgs = this.repoRecursive ? [
+          '--branch', this.branch,
+          '--recursive',
+        ] : [
+          '--branch', this.branch,
+        ];
+        console.log('Clone args: ', cloneArgs);
+        const result = await gitInstance.clone(this.repo, this.mountPoint, cloneArgs);
         console.log(result);
 
         // check if the branch was checked out
