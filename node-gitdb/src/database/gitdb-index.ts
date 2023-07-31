@@ -13,15 +13,22 @@ import { IIndexRecord } from '../interfaces/indexRecord';
 import { IIndexRoot } from '../interfaces/indexRoot';
 import { GitDB } from './gitdb';
 import { getRemark } from '../remark';
+import { environment } from '../environment';
 
 export class GitDBIndex {
   public readonly gitDB: GitDB;
   public static readonly indexingVersion = '0.0.0';
   public static readonly indexFile = 'index.json';
+  public readonly indexPath: string;
+  public readonly fullIndexPath: string;
+  public readonly fullIndexFilePath: string;
   private readonly tableRoots = new Map<string, IIndexRecord>();
 
   constructor(gitDb: GitDB) {
     this.gitDB = gitDb;
+    this.indexPath = environment.indexPath;
+    this.fullIndexPath = join(this.gitDB.gitDatabase.mountPoint, this.indexPath);
+    this.fullIndexFilePath = join(this.fullIndexPath, GitDBIndex.indexFile);
   }
 
   public async init(): Promise<void> {
@@ -43,15 +50,11 @@ export class GitDBIndex {
    * if it does, pull the index revision
    */
   public async determineIndexHash(): Promise<string | null> {
-    const indexFilePath = join(
-      this.gitDB.gitIndex.fullPath,
-      GitDBIndex.indexFile
-    );
-    if (!existsSync(indexFilePath)) {
+    if (!existsSync(this.fullIndexFilePath)) {
       return null;
     }
     try {
-      const index = JSON.parse(readFileSync(indexFilePath, 'utf-8'));
+      const index = JSON.parse(readFileSync(this.fullIndexFilePath, 'utf-8'));
       return index.hash || null;
     } catch (error) {
       console.error('Failed to parse JSON from index file: ', error);
@@ -90,21 +93,27 @@ export class GitDBIndex {
   }
 
   public async readIndexFile(table: string): Promise<boolean> {
-    const indexFilePath = join(
-      this.gitDB.gitIndex.fullPath,
-      table,
-      GitDBIndex.indexFile
-    );
-    if (!existsSync(indexFilePath)) {
+    if (!existsSync(this.fullIndexPath)) {
       return false;
     }
-    const indexData = readFileSync(indexFilePath, 'utf-8');
+    const tablePath = join(this.fullIndexPath, table);
+    const tableFilePath = join(tablePath, GitDBIndex.indexFile);
+    if (!existsSync(tableFilePath)) {
+      return false;
+    }
+    const indexData = readFileSync(tableFilePath, 'utf-8');
     const index = JSON.parse(indexData) as IIndexRecord;
     this.tableRoots.set(table, index);
     return true;
   }
 
-  public async indexTableFile(table: string, file: string): Promise<Node> {
+  /**
+   * Indexes a given file from the given table
+   * @param table 
+   * @param file 
+   * @returns Node containing the root of the parsed file
+   */
+  public async parseTableFileForIndex(table: string, file: string): Promise<Node> {
     /* Use remark to parse the index file and output a record object */
     const tableFilePath = join(this.gitDB.gitDatabase.fullPath, table, file);
     if (!existsSync(tableFilePath)) {
@@ -139,7 +148,7 @@ export class GitDBIndex {
         await this.updateHashWithFile(hash, filePath);
 
         // Parse the file and add its contents to the table records
-        const rootNode = await this.indexTableFile(table, file);
+        const rootNode = await this.parseTableFileForIndex(table, file);
         tableRecords.push(rootNode);
         console.log(rootNode);
       }
@@ -166,16 +175,16 @@ export class GitDBIndex {
     console.log(`Writing table to index: ${table}`);
 
     // Ensure the directory for the table exists in the index
-    const indexTablePath = join(this.gitDB.gitIndex.fullPath, table);
+    const indexTablePath = join(this.fullIndexPath, table);
     if (!existsSync(indexTablePath)) {
       console.log(`Creating directory for table in index: ${table}`);
       mkdirSync(indexTablePath, { recursive: true });
     }
 
     // Write the records and hash for the table to a file in the index
-    const indexFilePath = join(indexTablePath, GitDBIndex.indexFile);
+    const indexTableFilePath = join(indexTablePath, GitDBIndex.indexFile);
     const data: IIndexRecord = { records, hash };
-    writeFileSync(indexFilePath, JSON.stringify(data));
+    writeFileSync(indexTableFilePath, JSON.stringify(data));
   }
 
   private updateHashWithFile(hash: Hash, filePath: string): Promise<void> {
@@ -206,19 +215,14 @@ export class GitDBIndex {
     );
     const index: IIndexRoot = {
       database: await this.gitDB.gitDatabase.getCurrentRevision(),
-      last_index: await this.gitDB.gitIndex.getCurrentRevision(),
       version: GitDBIndex.indexingVersion,
     };
-    console.log(`Writing index revision to ${this.gitDB.gitIndex.fullPath}`);
-    if (!existsSync(this.gitDB.gitIndex.fullPath)) {
-      console.log(`Creating index directory ${this.gitDB.gitIndex.fullPath}`);
-      mkdirSync(this.gitDB.gitIndex.fullPath, { recursive: true });
+    console.log(`Writing index revision to ${this.fullIndexFilePath}`);
+    if (!existsSync(this.fullIndexPath)) {
+      console.log(`Creating index directory ${this.fullIndexPath}`);
+      mkdirSync(this.fullIndexPath, { recursive: true });
     }
-    const indexFilePath = join(
-      this.gitDB.gitIndex.fullPath,
-      GitDBIndex.indexFile
-    );
-    writeFileSync(indexFilePath, JSON.stringify(index));
+    writeFileSync(this.fullIndexFilePath, JSON.stringify(index));
   }
 
   public async updateIndiciesAndWriteRevision(): Promise<void> {

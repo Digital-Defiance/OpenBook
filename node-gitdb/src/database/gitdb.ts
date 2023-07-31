@@ -6,18 +6,15 @@ import { environment } from '../environment';
 
 export class GitDB {
   public readonly gitDatabase: GitOperations;
-  public readonly gitIndex: GitOperations;
   public readonly index: GitDBIndex;
 
-  constructor(gitDatabase: GitOperations, gitIndex: GitOperations) {
+  constructor(gitDatabase: GitOperations) {
     this.gitDatabase = gitDatabase;
-    this.gitIndex = gitIndex;
     this.index = new GitDBIndex(this);
   }
 
   public async init() {
     await this.gitDatabase.ensureCheckedOutLatest();
-    await this.gitIndex.ensureCheckedOutLatest();
     await this.index.init();
   }
 
@@ -86,8 +83,7 @@ export class GitDB {
 
   public static async new(): Promise<GitDB> {
     const gitDatabase = new GitOperations(environment.database);
-    const gitIndex = new GitOperations(environment.index);
-    const gitDb = new GitDB(gitDatabase, gitIndex);
+    const gitDb = new GitDB(gitDatabase);
     await gitDb.init();
     return gitDb;
   }

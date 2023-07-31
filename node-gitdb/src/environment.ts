@@ -9,14 +9,9 @@ export const environment: IEnvironment = {
         mountPoint: process.env.DATABASE_MOUNTPOINT ?? '/tmp/node-gitdb',
         repo: process.env.DATABASE_REPO ?? '',
         branch: process.env.DATABASE_BRANCH ?? 'main',
-        path: process.env.DATABASE_PATH ?? '/'
+        path: process.env.DATABASE_PATH ?? '/',
     },
-    index: {
-        mountPoint: process.env.INDEX_MOUNTPOINT ?? '/tmp/node-gitdb-index',
-        repo: process.env.INDEX_REPO ?? '',
-        branch: process.env.INDEX_BRANCH ?? 'main',
-        path: process.env.INDEX_PATH ?? '/'
-    }
+    indexPath: process.env.INDEX_PATH ?? '/.gitdb-index',
 };
 
 if (environment.production) {
