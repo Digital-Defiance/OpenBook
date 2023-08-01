@@ -51,6 +51,7 @@ export class GitDBIndex {
    */
   public async init(): Promise<void> {
     this._mongo = this.gitDb.mongoConnector;
+    this.updateIndiciesAndWriteRevision();
   }
 
   /**
@@ -221,5 +222,48 @@ export class GitDBIndex {
     const changes = await this.determineChangedFiles();
     console.log(`Changes: ${changes.join(', ')}`);
     await this.updateIndicies(changes);
+    await this.clearIndicesForMissingTables();
+  }
+
+  /**
+   * Clears the indices for the specified table and file, or all indices if no
+   * table or file is specified.
+   * @param table Table name
+   * @param file File name
+   */
+  public async clearIndices(table?: string, file?: string): Promise<void>
+  {
+    if (table && file) {
+      console.log(`Clearing index for ${table}/${file}`);
+      await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+        table,
+        file,
+        indexingVersion: GitDBIndex.indexingVersion
+      });
+    } else if (table) {
+      console.log(`Clearing index for ${table}`);
+      await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+        table,
+        indexingVersion: GitDBIndex.indexingVersion
+      });
+    } else {
+      console.log(`Clearing all indices`);
+      await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+        indexingVersion: GitDBIndex.indexingVersion
+      });
+    }
+  }
+
+  /**
+   * Clears the indices for any tables that no longer exist.
+   */
+  public async clearIndicesForMissingTables(): Promise<void> {
+    console.log(`Clearing indices for missing tables`);
+    const tableNames = this.gitDb.getTables();
+    // delete indices where table is not in tableNames
+    await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+      table: { $nin: tableNames },
+      indexingVersion: GitDBIndex.indexingVersion
+    });
   }
 }
