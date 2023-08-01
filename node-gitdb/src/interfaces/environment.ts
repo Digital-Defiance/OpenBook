@@ -1,17 +1,10 @@
 import { IGitOperations } from "./gitOperations";
+import { IMongo } from "./mongo";
 
 export interface IEnvironment {
     production: boolean;
     host: string;
     port: number;
-    database: IGitOperations;
-    index: {
-        file: string;    
-        path: string;
-    }
-    mongo: {
-        uri: string;
-        dbName: string;
-        collectionName: string;
-    }
+    gitdb: IGitOperations;
+    mongo: IMongo;
 }

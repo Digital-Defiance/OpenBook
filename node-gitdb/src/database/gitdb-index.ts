@@ -1,122 +1,149 @@
 import { createHash, Hash } from 'crypto';
-import {
-  createReadStream,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'fs';
+import { createReadStream, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { Node } from 'unist';
 
-import { IIndexRecord } from '../interfaces/indexRecord';
-import { IIndexRoot } from '../interfaces/indexRoot';
+import { IChangedFile } from '../interfaces/changedFile';
+import { IFileIndex } from '../interfaces/fileIndex';
 import { GitDB } from './gitdb';
 import { getRemark } from '../remark';
-import { environment } from '../environment';
 
+/**
+ * GitDBIndex is a class responsible for handling the indexing of a GitDB 
+ * instance. It connects to a MongoDB, calculates hashes for files, determines 
+ * file changes, parses files for indexing, and updates indices in MongoDB.
+ *
+ * Properties:
+ * - gitDb: Instance of GitDB.
+ * - mongo: Mongoose instance for connecting to MongoDB.
+ *
+ * Methods:
+ * - init: Initializes the GitDBIndex instance.
+ * - getTableFileIndex: Gets the latest record of a file from a table in MongoDB.
+ * - getTableFileHash: Calculates the SHA-256 hash of a file.
+ * - determineChangedFiles: Determines which files have changed in the tables.
+ * - parseTableFileForIndex: Parses a file for indexing.
+ * - updateIndicies: Updates the indices for a set of changed files.
+ * - updateHashWithFile: Updates a hasher with data from a file.
+ * - updateIndiciesAndWriteRevision: Updates indices and writes a new revision.
+ *
+ * @property {GitDB} gitDb - An instance of GitDB to be indexed.
+ * @property {mongoose} [mongo] - Mongoose instance for MongoDB operations.
+ */
 export class GitDBIndex {
-  public readonly gitDB: GitDB;
+  private readonly gitDb: GitDB;
+  private _mongo?: typeof import('mongoose');
+  public get mongo(): typeof import('mongoose') {
+    if (!this._mongo) {
+      throw new Error('Mongo has not been initialized');
+    }
+    return this._mongo;
+  }
   public static readonly indexingVersion = '0.0.0';
-  public readonly indexFile: string;
-  public readonly indexPath: string;
-  public readonly fullIndexPath: string;
-  public readonly fullIndexFilePath: string;
-  private readonly tableRoots = new Map<string, IIndexRecord>();
 
   constructor(gitDb: GitDB) {
-    this.gitDB = gitDb;
-    this.indexFile = environment.index.file;
-    this.indexPath = environment.index.path;
-    this.fullIndexPath = join(this.gitDB.gitDatabase.mountPoint, this.indexPath);
-    this.fullIndexFilePath = join(this.fullIndexPath, this.indexFile);
+    this.gitDb = gitDb;
   }
 
+  /**
+   * Initializes the GitDBIndex instance by setting up the MongoDB connection.
+   * Not available until after GitDB.init() has been called.
+   */
   public async init(): Promise<void> {
-    console.log('Reading existing indices');
-    // get a list of tables and read in any existing index files
-    const tables = this.gitDB.getTables();
+    this._mongo = this.gitDb.mongoConnector;
+  }
+
+  /**
+   * Queries the MongoDB collection 'IndexFileRecord' for a record that matches
+   * the given 'table' and 'file' and has the latest date. Returns the record if
+   * found; otherwise, returns null.
+   * @param table The table name to match in the query.
+   * @param file The file name to match in the query.
+   * @returns The found record or null.
+   */
+  public getTableFileIndex(
+    table: string,
+    file: string
+  ): Promise<IFileIndex | null> {
+    return this.mongo
+      .model<IFileIndex>('FileIndex')
+      .find({
+        table,
+        file,
+      })
+      .sort({ date: -1 })
+      .limit(1)
+      .then((records) => {
+        if (records.length === 0) {
+          return null;
+        }
+        return records[0];
+      });
+  }
+
+  /**
+   * Calculates and returns the SHA-256 hash of the specified file in the
+   * specified table.
+   * @param table The table containing the file.
+   * @param file The file to hash.
+   * @returns The calculated hash.
+   */
+  public getTableFileHash(table: string, file: string): string {
+    const tablePath = join(this.gitDb.gitDatabase.fullPath, table);
+    const tableFilePath = join(tablePath, file);
+    const hasher = createHash('sha256');
+    this.updateHashWithFile(tableFilePath, hasher);
+    return hasher.digest('hex');
+  }
+
+  /**
+   * Determines which files have changed in the tables and returns an array of
+   * objects representing these changed files.
+   * @returns An array of objects representing the changed files.
+   */
+  public async determineChangedFiles(): Promise<IChangedFile[]> {
+    console.log('Determining index changes');
+    const tables = this.gitDb.getTables();
+    const changedFiles: IChangedFile[] = [];
     for (const table of tables) {
-      const result = await this.readIndexFile(table);
-      if (result) {
-        console.log(`Read index file for table: ${table}`);
-      } else {
-        console.log(`No index file found for table: ${table}`);
+      const tableFiles = this.gitDb.getTableFiles(table);
+      for (const file of tableFiles) {
+        const indexRecord = await this.getTableFileIndex(table, file);
+        if (!indexRecord) {
+          console.log(`Table file is new: ${table}/${file}`);
+          changedFiles.push({
+            table,
+            file,
+          });
+        } else {
+          const fileHash = this.getTableFileHash(table, file);
+          if (fileHash !== indexRecord.hash) {
+            console.log(`Table file has changed: ${table}/${file}`);
+            changedFiles.push({
+              table,
+              file,
+            });
+          }
+        }
       }
     }
+    console.log('Finished determining index changes');
+    return changedFiles;
   }
 
   /**
-   * Look at the db mountpoint and see if indexDirectory exists
-   * if it does, pull the index revision
+   * Parses the specified file in the specified table using the remark tool and
+   * returns the root of the parsed file.
+   * @param table The table containing the file.
+   * @param file The file to parse.
+   * @returns The root of the parsed file.
    */
-  public async determineIndexHash(): Promise<string | null> {
-    if (!existsSync(this.fullIndexFilePath)) {
-      return null;
-    }
-    try {
-      const index = JSON.parse(readFileSync(this.fullIndexFilePath, 'utf-8'));
-      return index.hash || null;
-    } catch (error) {
-      console.error('Failed to parse JSON from index file: ', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Based on the current revision of the database and the index, determine what has changed
-   * and return a list of changed tables. If the index does not exist, return all tables.
-   */
-  public async determineIndexChanges(): Promise<string[]> {
-    console.log('Determining index changes');
-    const existingIndexHash = await this.determineIndexHash();
-    const currentDatabaseRevision =
-      await this.gitDB.gitDatabase.getCurrentRevision();
-
-    // If there is no existing index, return all files
-    if (!existingIndexHash) {
-      console.log('No existing index, returning all files');
-      return this.gitDB.getTables();
-    }
-
-    // If the current revision and the existing index hash are the same,
-    // there are no changes
-    if (existingIndexHash === currentDatabaseRevision) {
-      return [];
-    }
-
-    // If the current revision and the existing index hash are different,
-    // determine and return the changes
-    return this.gitDB.getChangedTables(
-      existingIndexHash,
-      currentDatabaseRevision
-    );
-  }
-
-  public async readIndexFile(table: string): Promise<boolean> {
-    if (!existsSync(this.fullIndexPath)) {
-      return false;
-    }
-    const tablePath = join(this.fullIndexPath, table);
-    const tableFilePath = join(tablePath, this.indexFile);
-    if (!existsSync(tableFilePath)) {
-      return false;
-    }
-    const indexData = readFileSync(tableFilePath, 'utf-8');
-    const index = JSON.parse(indexData) as IIndexRecord;
-    this.tableRoots.set(table, index);
-    return true;
-  }
-
-  /**
-   * Indexes a given file from the given table
-   * @param table 
-   * @param file 
-   * @returns Node containing the root of the parsed file
-   */
-  public async parseTableFileForIndex(table: string, file: string): Promise<Node> {
+  public async parseTableFileForIndex(
+    table: string,
+    file: string
+  ): Promise<Node> {
     /* Use remark to parse the index file and output a record object */
-    const tableFilePath = join(this.gitDB.gitDatabase.fullPath, table, file);
+    const tableFilePath = join(this.gitDb.gitDatabase.fullPath, table, file);
     if (!existsSync(tableFilePath)) {
       throw new Error(`Table file does not exist: ${tableFilePath}`);
     }
@@ -125,76 +152,54 @@ export class GitDBIndex {
     return remarkUnified.parse(tableData);
   }
 
-  public async updateIndicies(changedTables: string[]): Promise<void> {
+  /**
+   * Loops through the given array of changed files and updates the indices by
+   * parsing the files, calculating their hashes, and writing new index records
+   * to MongoDB.
+   * @param changedFiles An array of objects representing the changed files.
+   */
+  public async updateIndicies(changedFiles: IChangedFile[]): Promise<void> {
     console.log('Updating indicies');
     // Loop through each of the changed tables
-    for (const table of changedTables) {
-      console.log(`Processing table: ${table}`);
+    for (const { table, file } of changedFiles) {
+      console.log(`Processing table/file: ${table}/${file}`);
 
+      // Update the hash with the contents of the file
+      const filePath = join(this.gitDb.gitDatabase.fullPath, table, file);
       // Initialize a new hash for this table
-      const hash = createHash('sha256');
-
-      // Get the list of files for this table
-      const files = this.gitDB.getTableFiles(table);
-
-      // Initialize an array to store the records for this table
-      const tableRecords: Node[] = [];
-
-      // Loop through each of the files in the table
-      for (const file of files) {
-        console.log(`Processing file: ${file}`);
-
-        // Update the hash with the contents of the file
-        const filePath = join(this.gitDB.gitDatabase.fullPath, table, file);
-        await this.updateHashWithFile(hash, filePath);
-
-        // Parse the file and add its contents to the table records
-        const rootNode = await this.parseTableFileForIndex(table, file);
-        tableRecords.push(rootNode);
-        console.log(rootNode);
-      }
-
+      const fileHasher = createHash('sha256');
+      await this.updateHashWithFile(filePath, fileHasher);
       // Finalize the hash and store it in the map
-      const tableHash = hash.digest('hex');
-      console.log(`Finished processing table: ${table}, hash: ${tableHash}`);
+      const fileHash = fileHasher.digest('hex');
 
-      this.tableRoots.set(table, {
-        records: tableRecords,
-        hash: tableHash,
+      // Parse the file and add its contents to the table records
+      const rootNode = await this.parseTableFileForIndex(table, file);
+      console.log(rootNode);
+
+      this.mongo.model<IFileIndex>('FileIndex').create({
+        table,
+        hash: fileHash,
+        record: rootNode,
+        date: new Date(),
       });
-
-      // Write the table records and hash to the index
-      await this.writeTableToIndex(table, tableRecords, tableHash);
     }
   }
 
-  private async writeTableToIndex(
-    table: string,
-    records: Node[],
-    hash: string
-  ): Promise<void> {
-    console.log(`Writing table to index: ${table}`);
-
-    // Ensure the directory for the table exists in the index
-    const indexTablePath = join(this.fullIndexPath, table);
-    if (!existsSync(indexTablePath)) {
-      console.log(`Creating directory for table in index: ${table}`);
-      mkdirSync(indexTablePath, { recursive: true });
-    }
-
-    // Write the records and hash for the table to a file in the index
-    const indexTableFilePath = join(indexTablePath, this.indexFile);
-    const data: IIndexRecord = { records, hash };
-    writeFileSync(indexTableFilePath, JSON.stringify(data));
-  }
-
-  private updateHashWithFile(hash: Hash, filePath: string): Promise<void> {
+  /**
+   * Reads the specified file in chunks and updates the provided hasher with the
+   * data from each chunk.
+   * @param filePath The path of the file to read.
+   * @param hasher The Hash object to update with the file data.
+   * @returns A Promise that resolves when the file has been fully read and the
+   *   hasher has been updated.
+   */
+  private updateHashWithFile(filePath: string, hasher: Hash): Promise<void> {
     return new Promise((resolve, reject) => {
       const stream = createReadStream(filePath);
 
       stream.on('data', (chunk) => {
         // Update the hash with this chunk of data
-        hash.update(chunk);
+        hasher.update(chunk);
       });
 
       stream.on('end', () => {
@@ -208,29 +213,13 @@ export class GitDBIndex {
   }
 
   /**
-   * Write the current revision of the database to the index
+   * Determines which files have changed, updates the indices for these files,
+   * and writes a new revision.
    */
-  public async writeIndexRevision(): Promise<void> {
-    console.log(
-      'Getting DB revision in preperation for writing index revision'
-    );
-    const index: IIndexRoot = {
-      database: await this.gitDB.gitDatabase.getCurrentRevision(),
-      version: GitDBIndex.indexingVersion,
-    };
-    console.log(`Writing index revision to ${this.fullIndexFilePath}`);
-    if (!existsSync(this.fullIndexPath)) {
-      console.log(`Creating index directory ${this.fullIndexPath}`);
-      mkdirSync(this.fullIndexPath, { recursive: true });
-    }
-    writeFileSync(this.fullIndexFilePath, JSON.stringify(index));
-  }
-
   public async updateIndiciesAndWriteRevision(): Promise<void> {
     console.log('Updating indicies and writing revision');
-    const changes = await this.determineIndexChanges();
+    const changes = await this.determineChangedFiles();
     console.log(`Changes: ${changes.join(', ')}`);
     await this.updateIndicies(changes);
-    await this.writeIndexRevision();
   }
 }

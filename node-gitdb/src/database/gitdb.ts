@@ -1,25 +1,37 @@
 import { readdirSync, statSync } from 'fs';
+import { connect } from 'mongoose';
 import { join } from 'path';
 import { GitOperations } from './gitOperations';
 import { GitDBIndex } from './gitdb-index';
 import { environment } from '../environment';
-import { MongoConnector } from './mongo';
 
+/**
+ * GitDB is the Git-based on-disk component of node-gitdb. It is responsible for
+ * checking out the git repository containing the markdown formatted database
+ * and providing methods to index (into mongo) and query the database.
+ * 
+ * GitDB refers to the on-disk part, and GitDBIndex refers to the mongo index.
+ */
 export class GitDB {
   public readonly gitDatabase: GitOperations;
   public readonly index: GitDBIndex;
-  public readonly mongo: MongoConnector;
+  private mongo?: typeof import('mongoose');
+  public get mongoConnector(): typeof import('mongoose') {
+    if (!this.mongo) {
+      throw new Error('Mongo has not been initialized');
+    }
+    return this.mongo;
+  }
 
   constructor(gitDatabase: GitOperations) {
     this.gitDatabase = gitDatabase;
     this.index = new GitDBIndex(this);
-    this.mongo = new MongoConnector(environment.mongo.uri, environment.mongo.dbName);
   }
 
   public async init() {
     await this.gitDatabase.ensureCheckedOutLatest();
+    this.mongo = await connect(environment.mongo.uri);
     await this.index.init();
-    await this.mongo.connect();
   }
 
   /**
@@ -56,16 +68,18 @@ export class GitDB {
     return returnedFiles;
   }
 
+
+
   public async getChangedTables(
     table: string,
-    revision: string
+    sinceRevision: string
   ): Promise<string[]> {
     console.log(`Checking for changes in table: ${table}`);
     const git = this.gitDatabase.getSimpleGit();
     const tablePath = join(this.gitDatabase.fullPath, table);
     try {
       const diff = await git.diff([
-        `${revision}..HEAD`,
+        `${sinceRevision}..HEAD`,
         '--name-only',
         '--',
         tablePath,
@@ -86,7 +100,7 @@ export class GitDB {
   }
 
   public static async new(): Promise<GitDB> {
-    const gitDatabase = new GitOperations(environment.database);
+    const gitDatabase = new GitOperations(environment.gitdb);
     const gitDb = new GitDB(gitDatabase);
     await gitDb.init();
     return gitDb;
