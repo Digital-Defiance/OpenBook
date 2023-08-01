@@ -51,6 +51,7 @@ export class GitDBIndex {
    */
   public async init(): Promise<void> {
     this._mongo = this.gitDb.mongoConnector;
+    console.log('Refreshing and updating indicies');
     this.updateIndiciesAndWriteRevision();
   }
 
