@@ -9,8 +9,8 @@ import { GitDB } from './gitdb';
 import { getRemark } from '../remark';
 
 /**
- * GitDBIndex is a class responsible for handling the indexing of a GitDB 
- * instance. It connects to a MongoDB, calculates hashes for files, determines 
+ * GitDBIndex is a class responsible for handling the indexing of a GitDB
+ * instance. It connects to a MongoDB, calculates hashes for files, determines
  * file changes, parses files for indexing, and updates indices in MongoDB.
  *
  * Properties:
@@ -94,7 +94,7 @@ export class GitDBIndex {
     const tablePath = join(this.gitDb.gitDatabase.fullPath, table);
     const tableFilePath = join(tablePath, file);
     const hasher = createHash('sha256');
-    this.updateHashWithFile(tableFilePath, hasher);
+    hasher.update(readFileSync(tableFilePath));
     return hasher.digest('hex');
   }
 
@@ -170,7 +170,7 @@ export class GitDBIndex {
       const filePath = join(this.gitDb.gitDatabase.fullPath, table, file);
       // Initialize a new hash for this table
       const fileHasher = createHash('sha256');
-      await this.updateHashWithFile(filePath, fileHasher);
+      fileHasher.update(readFileSync(filePath));
       // Finalize the hash and store it in the map
       const fileHash = fileHasher.digest('hex');
 
@@ -178,40 +178,27 @@ export class GitDBIndex {
       const rootNode = await this.parseTableFileForIndex(table, file);
       console.log(rootNode);
 
-      this.mongo.model<IFileIndex>('FileIndex').create({
+      const query = {
         table,
-        hash: fileHash,
-        record: rootNode,
-        date: new Date(),
-      });
+        file,
+        indexingVersion: GitDBIndex.indexingVersion,
+      };
+      const update = {
+        $set: {
+          table,
+          hash: fileHash,
+          record: rootNode,
+          indexingVersion: GitDBIndex.indexingVersion,
+          date: new Date(),
+        },
+      };
+      const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+      // Find the document
+      await this.mongo
+        .model<IFileIndex>('FileIndex')
+        .findOneAndUpdate(query, update, options);
     }
-  }
-
-  /**
-   * Reads the specified file in chunks and updates the provided hasher with the
-   * data from each chunk.
-   * @param filePath The path of the file to read.
-   * @param hasher The Hash object to update with the file data.
-   * @returns A Promise that resolves when the file has been fully read and the
-   *   hasher has been updated.
-   */
-  private updateHashWithFile(filePath: string, hasher: Hash): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const stream = createReadStream(filePath);
-
-      stream.on('data', (chunk) => {
-        // Update the hash with this chunk of data
-        hasher.update(chunk);
-      });
-
-      stream.on('end', () => {
-        resolve();
-      });
-
-      stream.on('error', (error) => {
-        reject(error);
-      });
-    });
   }
 
   /**
@@ -221,7 +208,7 @@ export class GitDBIndex {
   public async updateIndiciesAndWriteRevision(): Promise<void> {
     console.log('Updating indicies and writing revision');
     const changes = await this.determineChangedFiles();
-    console.log(`Changes: ${changes.join(', ')}`);
+    console.log(`Changes: ${JSON.stringify(changes)}`);
     await this.updateIndicies(changes);
     await this.clearIndicesForMissingTables();
   }
@@ -232,25 +219,24 @@ export class GitDBIndex {
    * @param table Table name
    * @param file File name
    */
-  public async clearIndices(table?: string, file?: string): Promise<void>
-  {
+  public async clearIndices(table?: string, file?: string): Promise<void> {
     if (table && file) {
       console.log(`Clearing index for ${table}/${file}`);
       await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
         table,
         file,
-        indexingVersion: GitDBIndex.indexingVersion
+        indexingVersion: GitDBIndex.indexingVersion,
       });
     } else if (table) {
       console.log(`Clearing index for ${table}`);
       await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
         table,
-        indexingVersion: GitDBIndex.indexingVersion
+        indexingVersion: GitDBIndex.indexingVersion,
       });
     } else {
       console.log(`Clearing all indices`);
       await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
-        indexingVersion: GitDBIndex.indexingVersion
+        indexingVersion: GitDBIndex.indexingVersion,
       });
     }
   }
@@ -264,7 +250,7 @@ export class GitDBIndex {
     // delete indices where table is not in tableNames
     await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
       table: { $nin: tableNames },
-      indexingVersion: GitDBIndex.indexingVersion
+      indexingVersion: GitDBIndex.indexingVersion,
     });
   }
 }
