@@ -1,9 +1,14 @@
 import express from 'express';
 import { OutputFormat } from '../enumerations/outputFormat';
-import { GitDBIndex } from 'src/database/gitdb-index';
+import { GitDBIndex } from '../database/gitdb-index';
+import { environment } from '../environment';
 
 export function getQueryRouter(gitDbIndex: GitDBIndex) {
   const queryRouter = express.Router();
+
+  queryRouter.get('/excluded-files', async (req, res) => {
+    return res.send(environment.gitdb.excludeFiles);
+  });
 
   queryRouter.get('/tables', async (req, res) => {
     try {

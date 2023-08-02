@@ -141,6 +141,10 @@ export class GitDBIndex {
           }
           const table = parts[0];
           const file = parts[1];
+          if (environment.gitdb.excludeFiles.includes(file)) {
+            console.log(`Skipping excluded file: ${file}`);
+            continue;
+          }
           const fileSha256 = this.getTableFileSha256(table, file);
           const changedFile = {
             table,

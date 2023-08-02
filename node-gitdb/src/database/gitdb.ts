@@ -28,24 +28,20 @@ export class GitDB {
     this.index = new GitDBIndex(this);
   }
 
-  public async getChangedFiles(
-    sinceRevision: string
-  ): Promise<string[]> {
+  public async getChangedFiles(sinceRevision: string): Promise<string[]> {
     console.log(`Checking for since revision: ${sinceRevision}`);
     const git = this.gitDatabase.getSimpleGit();
     try {
-      const diff = await git.diff([
-        `${sinceRevision}..HEAD`,
-        '--name-only',
-        '--',
-      ]);
+      const diff = await git.diff([`${sinceRevision}..HEAD`, '--name-only', '--']);
       if (diff.trim().length === 0) {
         console.log(`No changes since revision: ${sinceRevision}`);
         return [];
       } else {
         const changedFiles = diff
           .split('\n')
-          .filter((file) => file.trim().length > 0);
+          .filter((file) => file.trim().length > 0)
+          // Check that the file is in a first-level directory
+          .filter((file) => file.split('/').length === 2);
         return changedFiles;
       }
     } catch (error) {
@@ -72,6 +68,8 @@ export class GitDB {
       if (stat.isDirectory()) {
         // ignore nested directories
         console.log(`Ignoring nested directory: ${relativePath}`);
+      } else if (environment.gitdb.excludeFiles.includes(file)) {
+        console.log(`Ignoring excluded file: ${relativePath}`);
       } else {
         returnedFiles.push(file);
       }
@@ -85,7 +83,10 @@ export class GitDB {
    */
   public getTables(): string[] {
     const tables = readdirSync(this.gitDatabase.fullPath);
-    return tables.filter((table) => !table.startsWith('.'));
+    return tables.filter((table) => {
+      const fullPath = join(this.gitDatabase.fullPath, table);
+      return statSync(fullPath).isDirectory() && !table.startsWith('.');
+    });
   }
 
   public async init() {

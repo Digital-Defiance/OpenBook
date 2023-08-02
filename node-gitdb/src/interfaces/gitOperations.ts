@@ -1,4 +1,5 @@
 export interface IGitOperations {
+    excludeFiles: string[];
     mountPoint: string;
     repo: string;
     repoRecursive: boolean;

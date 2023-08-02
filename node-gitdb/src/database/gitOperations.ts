@@ -5,6 +5,7 @@ import { IGitOperations } from 'src/interfaces/gitOperations';
 
 export class GitOperations {
   public readonly branch: string;
+  public readonly excludeFiles: string[];
   public readonly fullPath: string;
   public readonly gitPath: string;
   public readonly gitConfigPath: string;
@@ -16,6 +17,7 @@ export class GitOperations {
 
   constructor(config: IGitOperations) {
     this.branch = config.branch;
+    this.excludeFiles = config.excludeFiles;
     this.fullPath = join(config.mountPoint, config.path);
     this.gitPath = join(config.mountPoint, '.git');
     this.gitConfigPath = join(this.gitPath, 'config');
