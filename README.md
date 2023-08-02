@@ -19,7 +19,10 @@ Node-GitDB seeks to be a way for similar organizations to manage their membershi
 
 ## Mechanism of action
 
-We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately. We will use 'remark' and 'remark-gfm' to parse the markdown at index time, and produce a collection of parsed markdown files, ready to query. This map will constitute the 'database'. We will then insert/upsert all the documents into mongo for easy querying. The mongo is continually refreshed by the git repository, and at the moment this is mostly a wipe and reinsert process, but in the future we will be smarter.
+We will utilize git status and git diff to determine changes and we will store all the parsed markdown in the database respository under a separate repo so that its hashes are managed separately. We will use 'remark' and 'remark-gfm' to parse the markdown at index time, and produce a collection of parsed markdown files, ready to query. This map will constitute the 'database'. We will then insert/upsert all the documents into mongo for easy querying. The mongo is continually refreshed by the git repository.
+
+After indexing has been performed, a node express server will start up and provide a REST API to query the data.
+Documents can be requested in a variety of formats, including markdown, html, and json.
 
 ## Format
 
@@ -74,12 +77,12 @@ There are options to locate the date at a subdirectory within each of the reposi
 * Basic git cloning of data and index repositories
 * Basic indexing into a collection of remark Node objects
 * Support inserting the index data into mongo
-
-## In Progress
 * Improve change detection/mongo insertion
 
-## TODO
+## In Progress
 * Support querying/updating through REST API
+
+## TODO
 * Support storing basic markdown data through query
 * Support encryption of data
 * Support Git WebHooks to notify Node-GitDB of changes

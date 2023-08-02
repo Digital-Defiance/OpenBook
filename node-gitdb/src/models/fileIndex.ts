@@ -4,7 +4,8 @@ import { IFileIndex } from '../interfaces/fileIndex';
 export const fileIndexSchema: Schema = new Schema({
   table: String,
   file: String,
-  hash: String,
+  gitHash: String,
+  sha256: String,
   record: Object,
   indexingVersion: String,
   date: Date,

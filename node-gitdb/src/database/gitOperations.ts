@@ -141,6 +141,13 @@ export class GitOperations {
     return gitHash;
   }
 
+  public async getFileHash(table: string, file: string) {
+    const filePath = join(this.fullPath, table, file);
+    const git = this.getSimpleGit();
+    const hash = await git.raw(['hash-object', filePath]);
+    return hash.trim();
+  }
+
   public async pullLatest(git?: SimpleGit) {
     console.log('Pulling latest changes');
     git ??= this.getSimpleGit();

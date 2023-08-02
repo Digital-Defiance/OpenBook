@@ -2,10 +2,11 @@ import { Document } from 'mongoose';
 import { Root } from 'remark-gfm';
 
 export interface IFileIndex extends Document {
-    table: string;
     file: string;
-    hash: string;
-    record: Root;
+    gitHash: string;
     indexingVersion: string;
+    record: Root;
+    sha256: string;
+    table: string;
     date: Date;
 }

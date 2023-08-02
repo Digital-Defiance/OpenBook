@@ -28,19 +28,30 @@ export class GitDB {
     this.index = new GitDBIndex(this);
   }
 
-  public async init() {
-    await this.gitDatabase.ensureCheckedOutLatest();
-    this.mongo = await connect(environment.mongo.uri);
-    await this.index.init();
-  }
-
-  /**
-   * Get a list of all tables in the database
-   * @returns a list of all tables in the database
-   */
-  public getTables(): string[] {
-    const tables = readdirSync(this.gitDatabase.fullPath);
-    return tables.filter((table) => !table.startsWith('.'));
+  public async getChangedFiles(
+    sinceRevision: string
+  ): Promise<string[]> {
+    console.log(`Checking for since revision: ${sinceRevision}`);
+    const git = this.gitDatabase.getSimpleGit();
+    try {
+      const diff = await git.diff([
+        `${sinceRevision}..HEAD`,
+        '--name-only',
+        '--',
+      ]);
+      if (diff.trim().length === 0) {
+        console.log(`No changes since revision: ${sinceRevision}`);
+        return [];
+      } else {
+        const changedFiles = diff
+          .split('\n')
+          .filter((file) => file.trim().length > 0);
+        return changedFiles;
+      }
+    } catch (error) {
+      console.error(`Failed to get changes since revision: ${sinceRevision}`, error);
+      throw error;
+    }
   }
 
   /**
@@ -68,35 +79,19 @@ export class GitDB {
     return returnedFiles;
   }
 
+  /**
+   * Get a list of all tables in the database
+   * @returns a list of all tables in the database
+   */
+  public getTables(): string[] {
+    const tables = readdirSync(this.gitDatabase.fullPath);
+    return tables.filter((table) => !table.startsWith('.'));
+  }
 
-
-  public async getChangedTables(
-    table: string,
-    sinceRevision: string
-  ): Promise<string[]> {
-    console.log(`Checking for changes in table: ${table}`);
-    const git = this.gitDatabase.getSimpleGit();
-    const tablePath = join(this.gitDatabase.fullPath, table);
-    try {
-      const diff = await git.diff([
-        `${sinceRevision}..HEAD`,
-        '--name-only',
-        '--',
-        tablePath,
-      ]);
-      if (diff.trim().length === 0) {
-        console.log(`No changes in table: ${table}`);
-        return [];
-      } else {
-        const changedFiles = diff
-          .split('\n')
-          .map((filePath) => filePath.replace(`${tablePath}/`, ''));
-        return changedFiles;
-      }
-    } catch (error) {
-      console.error(`Failed to get changes in table: ${table}`, error);
-      throw error;
-    }
+  public async init() {
+    await this.gitDatabase.ensureCheckedOutLatest();
+    this.mongo = await connect(environment.mongo.uri);
+    await this.index.init();
   }
 
   public static async new(): Promise<GitDB> {
