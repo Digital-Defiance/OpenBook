@@ -1,12 +1,16 @@
 import { createHash, Hash } from 'crypto';
 import { createReadStream, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { Node } from 'unist';
 
 import { IChangedFile } from '../interfaces/changedFile';
 import { IFileIndex } from '../interfaces/fileIndex';
 import { GitDB } from './gitdb';
-import { getRemark } from '../remark';
+import {
+  getRemarkFromMarkdown,
+  getRemarkToHtml,
+  getRemarkToMarkdown,
+} from '../remark';
+import { Root } from 'remark-gfm';
 
 /**
  * GitDBIndex is a class responsible for handling the indexing of a GitDB
@@ -19,8 +23,9 @@ import { getRemark } from '../remark';
  *
  * Methods:
  * - init: Initializes the GitDBIndex instance.
- * - getIndexedTableFile: Gets the parsed representation of a table file from MongoDB
  * - getTableFileIndex: Gets the latest record of a file from a table in MongoDB.
+ * - getTableFileIndexNode: Gets the parsed representation of a table file from MongoDB
+ * - getTableFileIndexHtml: Gets the HTML representation of a table file from MongoDB
  * - getTableFileHash: Calculates the SHA-256 hash of a file.
  * - determineChangedFiles: Determines which files have changed in the tables.
  * - determineChangesAndUpdateIncices: Updates indices and writes a new revision.
@@ -62,24 +67,15 @@ export class GitDBIndex {
    * @param file The file name to match in the query.
    * @returns The found record or null.
    */
-  public getTableFileIndex(
+  public async getTableFileIndex(
     table: string,
     file: string
   ): Promise<IFileIndex | null> {
-    return this.mongo
-      .model<IFileIndex>('FileIndex')
-      .find({
-        table,
-        file,
-      })
-      .sort({ date: -1 })
-      .limit(1)
-      .then((records) => {
-        if (records.length === 0) {
-          return null;
-        }
-        return records[0];
-      });
+    return await this.mongo.model<IFileIndex>('FileIndex').findOne({
+      table,
+      file,
+      indexingVersion: GitDBIndex.indexingVersion,
+    });
   }
 
   /**
@@ -143,15 +139,36 @@ export class GitDBIndex {
   public async parseTableFileForIndex(
     table: string,
     file: string
-  ): Promise<Node> {
+  ): Promise<Root> {
     /* Use remark to parse the index file and output a record object */
     const tableFilePath = join(this.gitDb.gitDatabase.fullPath, table, file);
     if (!existsSync(tableFilePath)) {
       throw new Error(`Table file does not exist: ${tableFilePath}`);
     }
     const tableData = readFileSync(tableFilePath, 'utf-8');
-    const remarkUnified = await getRemark();
-    return remarkUnified.parse(tableData);
+    const remarkFromMarkdown = await getRemarkFromMarkdown();
+    return remarkFromMarkdown.parse(tableData);
+  }
+
+  public async getTables(): Promise<string[]> {
+    // query mongo for all distinct table names, making sure indexingVersion matches
+    const tables = await this.mongo
+      .model<IFileIndex>('FileIndex')
+      .distinct('table', {
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
+    return tables;
+  }
+
+  public async getTableFiles(table: string): Promise<string[]> {
+    // query mongo for all distinct file names, making sure indexingVersion matches
+    const files = await this.mongo
+      .model<IFileIndex>('FileIndex')
+      .distinct('file', {
+        table,
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
+    return files;
   }
 
   /**
@@ -160,17 +177,36 @@ export class GitDBIndex {
    * @param file The file to parse.
    * @returns The root of the parsed file.
    */
-  public async getIndexedTableFile(table: string, file: string): Promise<Node> {
-    const indexRecord = await this.mongo.model<IFileIndex>('FileIndex').findOne({
-      table,
-      file,
-      indexinVersion: GitDBIndex.indexingVersion,
-    });
+  public async getTableFileIndexRoot(
+    table: string,
+    file: string
+  ): Promise<Root> {
+    const indexRecord = await this.getTableFileIndex(table, file);
     if (!indexRecord) {
       throw new Error(`No index record found for ${table}/${file}`);
     }
-    const node: Node = indexRecord.record as Node;
-    return node;      
+    const node: Root = indexRecord.record as Root;
+    return node;
+  }
+
+  public async getTableFileIndexHtml(
+    table: string,
+    file: string
+  ): Promise<string> {
+    const root = await this.getTableFileIndexRoot(table, file);
+    const remarkHtmlUnified = await getRemarkToHtml();
+    const html = await remarkHtmlUnified.stringify(root);
+    return html;
+  }
+
+  public async getTableFileIndexMarkdown(
+    table: string,
+    file: string
+  ): Promise<string> {
+    const root = await this.getTableFileIndexRoot(table, file);
+    const remarkMarkdown = await getRemarkToMarkdown();
+    const markdown = await remarkMarkdown.stringify(root);
+    return markdown;
   }
 
   /**

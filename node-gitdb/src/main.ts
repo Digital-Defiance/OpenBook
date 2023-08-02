@@ -1,5 +1,5 @@
 import express from 'express';
-import queryRouter from './routers/query';
+import { getQueryRouter } from './routers/query';
 import { environment } from './environment';
 import { GitDB } from './database/gitdb';
 import { getModels } from './database/mongo';
@@ -7,7 +7,6 @@ import { getModels } from './database/mongo';
 const app = express();
 
 app.use(express.json());
-app.use('/query', queryRouter);
 
 (async function () {
   await getModels();
@@ -18,6 +17,8 @@ app.use('/query', queryRouter);
       console.log('Refreshing and updating indices');
       await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
+      const queryRouter = getQueryRouter(gitDb.index);
+      app.use('/query', queryRouter);
       app.listen(environment.port, environment.host, () => {
         console.log(`[ ready ] http://${environment.host}:${environment.port}`);
       });

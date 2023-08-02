@@ -1,11 +1,11 @@
 import { Document } from 'mongoose';
-import { Node } from 'unist';
+import { Root } from 'remark-gfm';
 
 export interface IFileIndex extends Document {
     table: string;
     file: string;
     hash: string;
-    record: Node;
+    record: Root;
     indexingVersion: string;
     date: Date;
 }
