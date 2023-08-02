@@ -53,6 +53,7 @@ There are options to locate the date at a subdirectory within each of the reposi
 
 * [Download](https://code.visualstudio.com/download) and install Visual Studio Code if you haven't already
 * [Download](https://www.docker.com/products/docker-desktop/) and install Docker Desktop if you haven't already
+* Highly recommend downloading and installing [Postman](https://www.postman.com/downloads/) for testing the REST API if you haven't already installed it.
 * If you don't already have a Git Bash installed by Visual Studio, [download](https://git-scm.com/downloads) and install Git Bash.
 * Open Git Bash and change directory to your favorite location for source code
 * ```$ git clone https://github.com/Digital-Defiance/node-gitdb.git```
