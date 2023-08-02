@@ -1,10 +1,10 @@
-# node-gitdb
+# node-GitDB
 
-Note: Node-GitDB is in pre-alpha, and is not only incomplete and undergoing development, but also should not be trusted with data.
+Note: Node-GitDB is in pre-alpha, is incomplete, and undergoing development. (See [#Complete](#Complete))
 
 -----
 
-Node-GitDB is an experimental git versioned markdown filesystem to mongo orchestrator. Rather than re-inventing the wheel, we opted to use MongoDB to store the data, and this service uses git to determine updates needed for the mongodb. This little service can currently be run on a cron or manually to sync up the data. In the future it will support webhooks to automatically update the data.
+Node-GitDB is an experimental git versioned markdown filesystem to mongo orchestrator. Rather than re-inventing the wheel, we opted to use MongoDB to store the data, and this is a service that uses git to determine updates needed for the mongodb. This little service can currently be run on a cron or manually to sync up the data. In the future it will support webhooks to automatically update the data.
 
 It is intended to take data from a human readable repository in markdown format (maximum, single folder level depth) in a mostly human-readable format. It is not designed for huge databases- is intended for relatively small (hundreds or thousands of records) databases, such as member lists, or other small datasets. It is limited by the filesystem, its speed, and the additional overhead of git and parsing markdown.
 
@@ -38,13 +38,7 @@ Further nesting is achieved within the markdown itself.
 
 See [Directory Structure](docs/Directory%20Structure.md) for more information on the directory structure.
 
-## Queries
-
-Queries will be done with JSON via REST in a manner reminiscent of MongoDB. Queries will specify the expected formatting of the data and any casting, which will keep that clutter out of the data.
-
-See [Querying](docs/Querying.md) for more information on querying.
-
-### Setup
+### GitDB Database Setup
 
 - Create or locate an existing git repository containing your data. It must be formatted and placed as above in order to be parsed correctly.
 - If the repository is to start empty, you must manually create an initial commit that is empty or has a .dotfile in it. 
@@ -52,15 +46,39 @@ See [Querying](docs/Querying.md) for more information on querying.
 Copy .env.example to .env and fill in the values.
 There are options to locate the date at a subdirectory within each of the repositories.
 
+## Developing/Running (Windows 11)
+
+* [Download](https://code.visualstudio.com/download) and install Visual Studio Code if you haven't already
+* [Download](https://www.docker.com/products/docker-desktop/) and install Docker Desktop if you haven't already
+* If you don't already have a Git Bash installed by Visual Studio, [download](https://git-scm.com/downloads) and install Git Bash.
+* Open Git Bash and change directory to your favorite location for source code
+* ```$ git clone https://github.com/Digital-Defiance/node-gitdb.git```
+* Open Visual Studio Code and 'open folder' to the node-gitdb directory
+* Once Visual Studio Code has loaded the project it should detect the .devcontainer/devcontainer.json file and offer to reopen in the container down in the lower right. You should decline until you have copied the /.devcontainer/.env.example to /.devcontainer/.env and filled in the values you desire to be your Mongo user/password. This .env file is used by docker-compose to set up mongo with a pre-specified user and password.
+  * MONGO_DB_USERNAME
+  * MONGO_DB_PASSWORD
+* There is another .env in node-gitdb (one level under the repo root. Copy node-gitdb/node-gitdb/.env.example to node-gitdb/.env and fill in the values you set in the Docker Compose level .env file.
+  * GITDB_REPO= should be the repository to be indexed. See [GitDB Database Setup](#gitdb-database-setup).
+  * uncommenting GITDB_REPO_RECURSIVE=true will cause GitDB to do a recursive checkout on the repository
+  * GITDB_REPO_BRANCH= defaults to 'main' if unspecified/commented. It is the name of the branch to index.
+  * GITDB_PATH= is the path within the repo where the tables to index are located.
+  * Your MONGO_URI will be mongodb://{user}:{password}@mongo:27017/{db name}?authSource=admin. {db name} is the name of the database you wish your GitDB index to be placed in. The default is 'node-gitdb'. The User and Password are the values you specified in the .devcontainer/.env file for Mongo to create an account as.
+* Once you have filled in the .env files, press Ctrl + Shift + P and a menu will appear at the top. Type in 'build' and select ''Dev Containers: Rebuild Container". The wording may vary on the first time building the project, something like: "Dev Containers: Build and open in container".
+* Once the Dev Container is loaded, Open a new ZSH (or bash) terminal via the top menu or press ```Ctrl + Shift + \````.
+* From within the devcontainer:
+  * ```$ cd node-gitdb/node-gitdb```
+  * ```$ yarn```
+  * ``` npx nx serve```
+
 ## Complete
 * Basic git cloning of data and index repositories
 * Basic indexing into a collection of remark Node objects
-
-## In Progress
 * Support inserting the index data into mongo
 
+## In Progress
+* Improve change detection/mongo insertion
+
 ## TODO
-* Support querying of basic markdown data through mongo
 * Support querying/updating through REST API
 * Support storing basic markdown data through query
 * Support encryption of data

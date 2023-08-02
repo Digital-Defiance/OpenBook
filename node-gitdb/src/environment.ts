@@ -12,14 +12,11 @@ export const environment: IEnvironment = {
         mountPoint: process.env.GITDB_MOUNTPOINT ?? '/tmp/node-gitdb',
         repo: process.env.GITDB_REPO ?? '',
         repoRecursive: process.env.GITDB_REPO_RECURSIVE === 'true',
-        branch: process.env.GITDB_BRANCH ?? 'main',
+        branch: process.env.GITDB_REPO_BRANCH ?? 'main',
         path: process.env.GITDB_PATH ?? '/',
     },
     mongo: {
         uri: process.env.MONGO_URI ?? 'mongodb://localhost:27017',
-        dbName: process.env.MONGO_DBNAME ?? 'gitdb',
-        collectionName: process.env.MONGO_COLLECTION ?? 'gitdb',
-        indexCollectionName: process.env.MONGO_INDEX_COLLECTION ?? 'gitdb-index',
     }
 };
 

@@ -19,6 +19,7 @@ import { getRemark } from '../remark';
  *
  * Methods:
  * - init: Initializes the GitDBIndex instance.
+ * - getIndexedTableFile: Gets the parsed representation of a table file from MongoDB
  * - getTableFileIndex: Gets the latest record of a file from a table in MongoDB.
  * - getTableFileHash: Calculates the SHA-256 hash of a file.
  * - determineChangedFiles: Determines which files have changed in the tables.
@@ -99,6 +100,7 @@ export class GitDBIndex {
   /**
    * Determines which files have changed in the tables and returns an array of
    * objects representing these changed files.
+   * TODO: Use git to determine changed files.
    * @returns An array of objects representing the changed files.
    */
   public async determineChangedFiles(): Promise<IChangedFile[]> {
@@ -150,6 +152,25 @@ export class GitDBIndex {
     const tableData = readFileSync(tableFilePath, 'utf-8');
     const remarkUnified = await getRemark();
     return remarkUnified.parse(tableData);
+  }
+
+  /**
+   * Gets a given indexed table file node from the mongo database.
+   * @param table The table containing the file.
+   * @param file The file to parse.
+   * @returns The root of the parsed file.
+   */
+  public async getIndexedTableFile(table: string, file: string): Promise<Node> {
+    const indexRecord = await this.mongo.model<IFileIndex>('FileIndex').findOne({
+      table,
+      file,
+      indexinVersion: GitDBIndex.indexingVersion,
+    });
+    if (!indexRecord) {
+      throw new Error(`No index record found for ${table}/${file}`);
+    }
+    const node: Node = indexRecord.record as Node;
+    return node;      
   }
 
   /**
