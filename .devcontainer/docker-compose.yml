@@ -22,8 +22,8 @@ services:
       - mongo_data:/data/db
     networks:
       - node-gitdb
-    expose:
-      - 27017
+    ports:
+      - 27017:27017
 
 volumes:
   mongo_data:
