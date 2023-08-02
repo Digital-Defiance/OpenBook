@@ -1,5 +1,23 @@
 # node-GitDB
 
+Node-GitDB REST API:
+
+<img width="1248" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/9ba17b9e-f9b9-4722-aac6-96ea95e89e7f">
+
+GitDB Markdown Database Structure:
+
+<img width="515" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/285c72b9-24bd-4855-ad2d-0b9e8e68cc1f">
+
+GitDB JSON (this format is what is stored in Mongo):
+
+<img width="696" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/07423d9a-94de-46a7-a172-6be9d31a1f51">
+
+Example Markdown (viewed in Typora)
+
+<img width="1135" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/5351e4bd-81a2-4182-91c7-ebaf6fce4f81">
+<img width="885" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/df6fec00-3121-44ea-99c8-eed4468f3e1d">
+
+
 Note: Node-GitDB is in pre-alpha, is incomplete, and undergoing development. (See [#Complete](#Complete))
 
 -----
