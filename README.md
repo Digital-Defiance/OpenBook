@@ -14,8 +14,9 @@ GitDB JSON (this format is what is stored in Mongo):
 
 Example Markdown (viewed in Typora)
 
-<img width="1135" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/5351e4bd-81a2-4182-91c7-ebaf6fce4f81">
-<img width="885" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/df6fec00-3121-44ea-99c8-eed4468f3e1d">
+![image](https://github.com/Digital-Defiance/node-gitdb/assets/3766240/dca2f606-414d-47ec-be3a-631b6146ea44)
+
+<img width="955" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/e6eef79c-de19-4eaf-8b03-711d118a8ca6">
 
 
 Note: Node-GitDB is in pre-alpha, is incomplete, and undergoing development. (See [#Complete](#Complete))
