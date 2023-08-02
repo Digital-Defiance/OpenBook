@@ -1,5 +1,8 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import { resolve } from 'path';
 import { IEnvironment } from "./interfaces/environment";
+
+dotenv.config({ path: resolve(__dirname, '../.env') });
 
 export const environment: IEnvironment = {
     production: process.env.NODE_ENV === 'production',

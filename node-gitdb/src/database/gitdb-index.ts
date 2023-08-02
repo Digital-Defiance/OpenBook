@@ -22,10 +22,10 @@ import { getRemark } from '../remark';
  * - getTableFileIndex: Gets the latest record of a file from a table in MongoDB.
  * - getTableFileHash: Calculates the SHA-256 hash of a file.
  * - determineChangedFiles: Determines which files have changed in the tables.
+ * - determineChangesAndUpdateIncices: Updates indices and writes a new revision.
  * - parseTableFileForIndex: Parses a file for indexing.
  * - updateIndicies: Updates the indices for a set of changed files.
  * - updateHashWithFile: Updates a hasher with data from a file.
- * - updateIndiciesAndWriteRevision: Updates indices and writes a new revision.
  *
  * @property {GitDB} gitDb - An instance of GitDB to be indexed.
  * @property {mongoose} [mongo] - Mongoose instance for MongoDB operations.
@@ -51,8 +51,6 @@ export class GitDBIndex {
    */
   public async init(): Promise<void> {
     this._mongo = this.gitDb.mongoConnector;
-    console.log('Refreshing and updating indicies');
-    this.updateIndiciesAndWriteRevision();
   }
 
   /**
@@ -205,7 +203,7 @@ export class GitDBIndex {
    * Determines which files have changed, updates the indices for these files,
    * and writes a new revision.
    */
-  public async updateIndiciesAndWriteRevision(): Promise<void> {
+  public async determineChangesAndUpdateIncices(): Promise<void> {
     console.log('Updating indicies and writing revision');
     const changes = await this.determineChangedFiles();
     console.log(`Changes: ${JSON.stringify(changes)}`);

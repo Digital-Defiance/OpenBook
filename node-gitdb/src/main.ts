@@ -15,6 +15,8 @@ app.use('/query', queryRouter);
     try {
       console.log('Loading GitDB');
       const gitDb = await GitDB.new();
+      console.log('Refreshing and updating indices');
+      await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
       app.listen(environment.port, environment.host, () => {
         console.log(`[ ready ] http://${environment.host}:${environment.port}`);
