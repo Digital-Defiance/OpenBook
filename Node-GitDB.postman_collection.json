@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "85926801-656e-46d1-927f-4508deb577ea",
+		"name": "Node-GitDB",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12150153",
+		"_collection_link": "https://solar-shuttle-782726.postman.co/workspace/Node-GitDB~f7af7469-07aa-4a5d-8389-809e686dee66/collection/12150153-85926801-656e-46d1-927f-4508deb577ea?action=share&creator=12150153&source=collection_link"
+	},
+	"item": [
+		{
+			"name": "Get Tables",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.environment.set(\"table_name\", jsonData.tables[0]);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table Files",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.environment.set(\"file_name\", jsonData.files[0]);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table File Formats",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}",
+						"{{file_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table File JSON",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/json",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}",
+						"{{file_name}}",
+						"json"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table File Markdown",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/markdown",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}",
+						"{{file_name}}",
+						"markdown"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table File HTML",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/html",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}",
+						"{{file_name}}",
+						"html"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

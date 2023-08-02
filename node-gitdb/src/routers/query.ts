@@ -14,11 +14,27 @@ export function getQueryRouter(gitDbIndex: GitDBIndex) {
     }
   });
 
-  queryRouter.get('/:table/:file/:format', async (req, res) => {
+  queryRouter.get('/tables/:table', async (req, res) => {
+    const table = req.params.table;
+    try {
+      const files = await gitDbIndex.getTableFiles(table);
+      res.send({ table, files });
+    } catch (error) {
+      res.status(500).send({ error: `Error occurred: ${error.message}` });
+    }
+  });
+
+  queryRouter.get('/tables/:table/:file', async (req, res) => {
+    // get the values of OutputFormat and return as an array
+    const values = Object.values(OutputFormat);
+    res.json(values);
+  });
+
+  queryRouter.get('/tables/:table/:file/:format', async (req, res) => {
     const { table, file } = req.params;
     const format: string = req.params.format.toLowerCase();
-
-    if (!(format in OutputFormat)) {
+    const formats: string[] = Object.values(OutputFormat) as string[];
+    if (!formats.includes(format)) {
       res.status(400).send({
         error: `Invalid format ${format}, should be 'html', 'json' or 'markdown'`,
       });
