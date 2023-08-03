@@ -29,25 +29,7 @@ export class GitDB {
   }
 
   public async getChangedFiles(sinceRevision: string): Promise<string[]> {
-    console.log(`Checking for since revision: ${sinceRevision}`);
-    const git = this.gitDatabase.getSimpleGit();
-    try {
-      const diff = await git.diff([`${sinceRevision}..HEAD`, '--name-only', '--']);
-      if (diff.trim().length === 0) {
-        console.log(`No changes since revision: ${sinceRevision}`);
-        return [];
-      } else {
-        const changedFiles = diff
-          .split('\n')
-          .filter((file) => file.trim().length > 0)
-          // Check that the file is in a first-level directory
-          .filter((file) => file.split('/').length === 2);
-        return changedFiles;
-      }
-    } catch (error) {
-      console.error(`Failed to get changes since revision: ${sinceRevision}`, error);
-      throw error;
-    }
+    return await this.gitDatabase.getChangedFiles(sinceRevision);
   }
 
   /**

@@ -121,30 +121,13 @@ export class GitDBIndex {
       } else {
         for (const changedGitFile of gitChangedFiles) {
           console.log(`Changed file: ${changedGitFile}`)
-          // changedFile is a string with the path of the file that is changed
-          // first, get the string difference between the fullpath and the mountpoint
-          // then, split on / and make sure there are two parts
-          // this.gitDb.gitDatabase.fullPath is the mountpoint + the relative path
-          // 
-          let path = this.gitDb.gitDatabase.relativePath;
-          // path may have leading slash, remove it if it does
-          if (path.startsWith('/')) {
-            path = path.substring(1);
-          }
-          // append trailing slash if it doesn't exist
-          if (!path.endsWith('/')) {
-            path += '/';
-          }
-          const parts = changedGitFile.replace(path, '').split('/');
+          const parts = changedGitFile.split('/');
+
           if (parts.length !== 2) {
             throw new Error(`Invalid changed file: ${changedGitFile}`);
           }
           const table = parts[0];
           const file = parts[1];
-          if (environment.gitdb.excludeFiles.includes(file)) {
-            console.log(`Skipping excluded file: ${file}`);
-            continue;
-          }
           const fileSha256 = this.getTableFileSha256(table, file);
           const changedFile = {
             table,
