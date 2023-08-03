@@ -133,47 +133,48 @@ export class GitOperations {
   public async getChangedFiles(sinceRevision: string): Promise<string[]> {
     console.log(`Checking for since revision: ${sinceRevision}`);
     const git = this.getSimpleGit();
+  
     try {
       const diff = await git.diff([`${sinceRevision}..HEAD`, '--name-only', '--']);
+  
       if (diff.trim().length === 0) {
         console.log(`No changes since revision: ${sinceRevision}`);
         return [];
-      } else {
-        const relativePath = this.relativePath;
-        // git diff relative to the root of the repo, but we have this.relativePath which is either /
-        // or a path relative to the root of the repo. We want to filter out any changes that are not
-        // under this.relativePath
-        // relative path may be /, in which case we want to pay attention to all paths
-        // if relativePath is /tables then we only want to pay attention under /tables within the repo
-        const changedFiles = diff
-          .split('\n')
-          .filter((file) => {
-            if (relativePath === '/') {
-              return true;
-            } else {
-              return file.startsWith(relativePath);
-            }
-          })
-          .filter((file) => {
-            if (this.excludeFiles) {
-              // excludeFiles is a list of filenames only, not paths
-              const filename = basename(file);
-              return !this.excludeFiles.includes(filename);
-            } else {
-              return true;
-            }
-          }).filter((file) => {
-            return file.length > 0;
-          });
-        console.log('Changed files: ', changedFiles);
-        return changedFiles;
-      }
+      } 
+  
+      const relativePath = this.relativePath;
+  
+      const changedFiles = diff.split('\n').filter(file => {
+        // Exclude empty strings
+        if (file.length === 0) return false;
+  
+        // Exclude files not under the relative path
+        if (relativePath !== '/' && !file.startsWith(relativePath)) return false;
+  
+        const fileParts = file.split('/');
+  
+        // Exclude files not at the correct directory depth
+        if (relativePath === '/' ? fileParts.length <= 1 : fileParts.length !== 2) return false;
+  
+        // Exclude specific filenames, if provided
+        if (this.excludeFiles) {
+          const filename = basename(file);
+          return !this.excludeFiles.includes(filename);
+        }
+  
+        return true;
+      });
+  
+      console.log('Changed files: ', changedFiles);
+  
+      return changedFiles;
+  
     } catch (error) {
       console.error(`Failed to get changes since revision: ${sinceRevision}`, error);
       throw error;
     }
   }
-
+  
   public async getCurrentBranch(git?: SimpleGit): Promise<string> {
     console.log('Getting current branch');
     git ??= this.getSimpleGit();
