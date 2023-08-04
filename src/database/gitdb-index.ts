@@ -275,12 +275,13 @@ export class GitDBIndex {
     return node;
   }
 
-  public async getTableFileIndices(table: string): Promise<IFileIndex[]> {
+  public async getTableFileIndices(table: string, includeNonData = false): Promise<IFileIndex[]> {
     return await this.mongo
       .model<IFileIndex>('FileIndex')
       .find({
         indexingVersion: GitDBIndex.indexingVersion,
         table,
+        ...(includeNonData ? {} : { data: true }),
       }).sort({ file: 1 });
   }
 
