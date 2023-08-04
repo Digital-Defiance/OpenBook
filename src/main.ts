@@ -17,7 +17,7 @@ app.use(express.json());
       console.log('Refreshing and updating indices');
       await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
-      const queryRouter = getQueryRouter(gitDb.index);
+      const queryRouter = getQueryRouter(gitDb);
       app.use('/query', queryRouter);
       app.listen(environment.port, environment.host, () => {
         console.log(`[ ready ] http://${environment.host}:${environment.port}`);

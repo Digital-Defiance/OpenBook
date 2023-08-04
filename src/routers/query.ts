@@ -1,13 +1,20 @@
 import express from 'express';
 import { OutputFormat } from '../enumerations/outputFormat';
-import { GitDBIndex } from '../database/gitdb-index';
+import { GitDB } from '../database/gitdb';
 
-export function getQueryRouter(gitDbIndex: GitDBIndex) {
+export function getQueryRouter(gitDb: GitDB) {
   const queryRouter = express.Router();
+
+  queryRouter.get('/data/:table', async (req, res) => {
+    const table = req.params.table;
+    const indices = await gitDb.index.getTableFileIndices(table);
+    const data = indices.map((index) => index.record);
+    res.send({ table, data });
+  });
 
   queryRouter.get('/tables', async (req, res) => {
     try {
-      const tables = await gitDbIndex.getTables();
+      const tables = await gitDb.index.getTables();
       res.send({ tables });
     } catch (error) {
       res.status(500).send({ error: `Error occurred: ${error.message}` });
@@ -17,7 +24,7 @@ export function getQueryRouter(gitDbIndex: GitDBIndex) {
   queryRouter.get('/tables/:table', async (req, res) => {
     const table = req.params.table;
     try {
-      const files = await gitDbIndex.getTableFiles(table);
+      const files = await gitDb.index.getTableFiles(table);
       res.send({ table, files });
     } catch (error) {
       res.status(500).send({ error: `Error occurred: ${error.message}` });
@@ -32,7 +39,7 @@ export function getQueryRouter(gitDbIndex: GitDBIndex) {
 
   queryRouter.get('/tables/:table/:file/complete-json', async (req, res) => {
     const { table, file } = req.params;
-    const index = await gitDbIndex.getTableFileIndex(table, file);
+    const index = await gitDb.index.getTableFileIndex(table, file);
     res.json(index);
   });
 
@@ -51,15 +58,15 @@ export function getQueryRouter(gitDbIndex: GitDBIndex) {
       let content = null;
       switch (format) {
         case OutputFormat.Html:
-          content = await gitDbIndex.getTableFileIndexHtml(table, file);
+          content = await gitDb.index.getTableFileIndexHtml(table, file);
           break;
         case OutputFormat.Json:
           content = JSON.stringify(
-            await gitDbIndex.getTableFileIndexRoot(table, file)
+            await gitDb.index.getTableFileIndexRoot(table, file)
           );
           break;
         case OutputFormat.Markdown:
-          content = await gitDbIndex.getTableFileIndexMarkdown(table, file);
+          content = await gitDb.index.getTableFileIndexMarkdown(table, file);
           break;
         default:
           res.status(500).send({ error: 'Unknown format' });

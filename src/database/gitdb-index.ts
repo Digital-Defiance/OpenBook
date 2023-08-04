@@ -275,6 +275,15 @@ export class GitDBIndex {
     return node;
   }
 
+  public async getTableFileIndices(table: string): Promise<IFileIndex[]> {
+    return await this.mongo
+      .model<IFileIndex>('FileIndex')
+      .find({
+        indexingVersion: GitDBIndex.indexingVersion,
+        table,
+      }).sort({ file: 1 });
+  }
+
   /**
    * Gets all files for the specified table in the mongo database.
    * @param table The table to get the files for.
@@ -287,7 +296,7 @@ export class GitDBIndex {
       .distinct('file', {
         table,
         indexingVersion: GitDBIndex.indexingVersion,
-      });
+      }).sort();
     return files;
   }
 
