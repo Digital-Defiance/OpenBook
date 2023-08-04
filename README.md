@@ -82,7 +82,6 @@ There are options to locate the date at a subdirectory within each of the reposi
   * MONGO_DB_PASSWORD
 * There is another .env in node-gitdb (one level under the repo root. Copy node-gitdb/node-gitdb/.env.example to node-gitdb/.env and fill in the values you set in the Docker Compose level .env file.
   * GITDB_REPO= should be the repository to be indexed. See [GitDB Database Setup](#gitdb-database-setup).
-  * uncommenting GITDB_REPO_RECURSIVE=true will cause GitDB to do a recursive checkout on the repository
   * GITDB_REPO_BRANCH= defaults to 'main' if unspecified/commented. It is the name of the branch to index.
   * GITDB_PATH= is the path within the repo where the tables to index are located.
   * Your MONGO_URI will be mongodb://{user}:{password}@mongo:27017/{db name}?authSource=admin. {db name} is the name of the database you wish your GitDB index to be placed in. The default is 'node-gitdb'. The User and Password are the values you specified in the .devcontainer/.env file for Mongo to create an account as.

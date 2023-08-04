@@ -50,8 +50,6 @@ export class GitDB {
       if (stat.isDirectory()) {
         // ignore nested directories
         console.log(`Ignoring nested directory: ${relativePath}`);
-      } else if (environment.gitdb.excludeFiles.includes(file)) {
-        console.log(`Ignoring excluded file: ${relativePath}`);
       } else {
         returnedFiles.push(file);
       }

@@ -13,7 +13,6 @@ run-interactive:
 	--env GITDB_REPO_RECURSIVE="${GITDB_REPO_RECURSIVE}" \
 	--env GITDB_REPO_BRANCH="${GITDB_REPO_BRANCH}" \
 	--env GITDB_PATH="${GITDB_PATH}" \
-	--env GITDB_EXCLUDE_FILES="${GITDB_EXCLUDE_FILES}" \
 	--env MONGO_URI="${MONGO_URI}" \
 	--publish 3000:3000 \
 	--interactive --tty \

@@ -2,6 +2,7 @@ import { model, Model, Schema } from 'mongoose';
 import { IFileIndex } from '../interfaces/fileIndex';
 
 export const fileIndexSchema: Schema = new Schema({
+  data: Boolean,
   table: String,
   file: String,
   gitHash: String,

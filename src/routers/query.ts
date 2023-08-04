@@ -1,14 +1,9 @@
 import express from 'express';
 import { OutputFormat } from '../enumerations/outputFormat';
 import { GitDBIndex } from '../database/gitdb-index';
-import { environment } from '../environment';
 
 export function getQueryRouter(gitDbIndex: GitDBIndex) {
   const queryRouter = express.Router();
-
-  queryRouter.get('/excluded-files', async (req, res) => {
-    return res.send(environment.gitdb.excludeFiles);
-  });
 
   queryRouter.get('/tables', async (req, res) => {
     try {
@@ -33,6 +28,12 @@ export function getQueryRouter(gitDbIndex: GitDBIndex) {
     // get the values of OutputFormat and return as an array
     const values = Object.values(OutputFormat);
     res.json(values);
+  });
+
+  queryRouter.get('/tables/:table/:file/complete-json', async (req, res) => {
+    const { table, file } = req.params;
+    const index = await gitDbIndex.getTableFileIndex(table, file);
+    res.json(index);
   });
 
   queryRouter.get('/tables/:table/:file/:format', async (req, res) => {

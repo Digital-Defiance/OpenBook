@@ -5,7 +5,6 @@ import { IGitOperations } from 'src/interfaces/gitOperations';
 
 export class GitOperations {
   public readonly branch: string;
-  public readonly excludeFiles: string[];
   public readonly fullPath: string;
   public readonly gitPath: string;
   public readonly gitConfigPath: string;
@@ -13,11 +12,9 @@ export class GitOperations {
   public readonly mountParent: string;
   public readonly relativePath: string;
   public readonly repo: string;
-  public readonly repoRecursive: boolean;
 
   constructor(config: IGitOperations) {
     this.branch = config.branch;
-    this.excludeFiles = config.excludeFiles;
     this.fullPath = join(config.mountPoint, config.path);
     this.gitPath = join(config.mountPoint, '.git');
     this.gitConfigPath = join(this.gitPath, 'config');
@@ -34,7 +31,6 @@ export class GitOperations {
     }
     this.relativePath = relativePath;
     this.repo = config.repo;
-    this.repoRecursive = config.repoRecursive;
 
     if (!existsSync(this.mountParent)) {
       throw new Error('Mountpoint parent does not exist');
@@ -88,10 +84,7 @@ export class GitOperations {
       );
       try {
         const gitInstance = simpleGit();
-        const cloneArgs = this.repoRecursive ? [
-          '--branch', this.branch,
-          '--recursive',
-        ] : [
+        const cloneArgs = [
           '--branch', this.branch,
         ];
         console.log('Clone args: ', cloneArgs);
@@ -135,7 +128,7 @@ export class GitOperations {
     const git = this.getSimpleGit();
   
     try {
-      const diff = await git.diff([`${sinceRevision}..HEAD`, '--name-only', '--']);
+      const diff = await git.diff([`${sinceRevision}..HEAD`, '--name-only', '--', '*.md']);
   
       if (diff.trim().length === 0) {
         console.log(`No changes since revision: ${sinceRevision}`);
@@ -155,12 +148,6 @@ export class GitOperations {
   
         // Exclude files not at the correct directory depth
         if (relativePath === '/' ? fileParts.length <= 1 : fileParts.length !== 2) return false;
-  
-        // Exclude specific filenames, if provided
-        if (this.excludeFiles) {
-          const filename = basename(file);
-          return !this.excludeFiles.includes(filename);
-        }
   
         return true;
       });

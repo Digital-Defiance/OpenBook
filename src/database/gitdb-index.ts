@@ -334,6 +334,18 @@ export class GitDBIndex {
     return remarkFromMarkdown.parse(tableData);
   }
 
+  private fileIsData(file: string): boolean {
+    // if file is template.md, *.template.md, or README.md, it is not data
+    if (
+      file === 'template.md' ||
+      file === 'README.md' ||
+      file.endsWith('.template.md')
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Loops through the given array of changed files and updates the indices by
    * parsing the files, calculating their hashes, and writing new index records
@@ -365,6 +377,7 @@ export class GitDBIndex {
       };
       const update = {
         $set: {
+          data: this.fileIsData(file),
           file: file,
           gitHash: await this.gitDb.gitDatabase.getFileHash(table, file),
           indexingVersion: GitDBIndex.indexingVersion,

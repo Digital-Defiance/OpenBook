@@ -9,7 +9,6 @@ export const environment: IEnvironment = {
     host: process.env.HOST ?? 'localhost',
     port: Number(process.env.PORT ?? 3000),
     gitdb: {
-        excludeFiles: process.env.GITDB_EXCLUDE_FILES?.split('|') ?? [],
         mountPoint: process.env.GITDB_MOUNTPOINT ?? '/tmp/node-gitdb',
         repo: process.env.GITDB_REPO ?? '',
         repoRecursive: process.env.GITDB_REPO_RECURSIVE === 'true',

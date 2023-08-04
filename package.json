@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nx serve",
+    "start:direct": "node dist/node-gitdb/main.js",
     "build": "nx build",
     "test": "nx test",
     "secret:new": "node -e \"console.log (require('crypto').randomBytes(32).toString ('hex'));\""
