@@ -1,9 +1,11 @@
 import { createHash } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { Root } from 'remark-gfm';
 
 import { IChangedFile } from '../interfaces/changedFile';
 import { IFileIndex } from '../interfaces/fileIndex';
+import { IFileNode } from '../interfaces/fileNode';
 import { IIndexTracker } from '../interfaces/indexTracker';
 import { GitDB } from './gitdb';
 import {
@@ -11,8 +13,6 @@ import {
   getRemarkToHtml,
   getRemarkToMarkdown,
 } from '../remark';
-import { Root } from 'remark-gfm';
-import { environment } from '../environment';
 
 /**
  * GitDBIndex is a class responsible for handling the indexing of a GitDB
@@ -41,7 +41,7 @@ import { environment } from '../environment';
  * - parseTableFileForIndex: Parses a file for indexing.
  * - updateIndicies: Updates the indices for a set of changed files.
  * - writeIndexTracker: Writes an index tracker to MongoDB.
- * 
+ *
  * @property {GitDB} gitDb - An instance of GitDB to be indexed.
  * @property {mongoose} [mongo] - Mongoose instance for MongoDB operations.
  */
@@ -120,7 +120,7 @@ export class GitDBIndex {
         noChanges = true;
       } else {
         for (const changedGitFile of gitChangedFiles) {
-          console.log(`Changed file: ${changedGitFile}`)
+          console.log(`Changed file: ${changedGitFile}`);
           const parts = changedGitFile.split('/');
 
           if (parts.length !== 2) {
@@ -135,19 +135,22 @@ export class GitDBIndex {
             gitHash: await this.gitDb.gitDatabase.getFileHash(table, file),
             sha256: fileSha256,
           };
-          console.log(`Changed file: ${JSON.stringify(changedFile)}`)
+          console.log(`Changed file: ${JSON.stringify(changedFile)}`);
           changedFiles.push(changedFile);
         }
       }
     } else {
       console.log('No index records found');
-      changedFiles.push(...await this.getAllFilesAsChangedFiles());
+      changedFiles.push(...(await this.getAllFilesAsChangedFiles()));
     }
     console.log('Finished determining index changes');
     if (noChanges) {
       console.log('Skipping index update because no changes were found');
     } else {
-      await this.writeIndexTracker(await this.gitDb.gitDatabase.getCurrentRevision(), changedFiles);
+      await this.writeIndexTracker(
+        await this.gitDb.gitDatabase.getCurrentRevision(),
+        changedFiles
+      );
     }
     return changedFiles;
   }
@@ -173,7 +176,7 @@ export class GitDBIndex {
    * @returns An array of objects representing all files in the GitDB as changed files.
    */
   public async getAllFilesAsChangedFiles(): Promise<IChangedFile[]> {
-    console.log("Getting all files as changed files");
+    console.log('Getting all files as changed files');
     const changedFiles: IChangedFile[] = [];
     const tables = this.gitDb.getTables();
     for (const table of tables) {
@@ -275,14 +278,18 @@ export class GitDBIndex {
     return node;
   }
 
-  public async getTableFileIndices(table: string, includeNonData = false): Promise<IFileIndex[]> {
+  public async getTableFileIndices(
+    table: string,
+    includeNonData = false
+  ): Promise<IFileIndex[]> {
     return await this.mongo
       .model<IFileIndex>('FileIndex')
       .find({
         indexingVersion: GitDBIndex.indexingVersion,
         table,
         ...(includeNonData ? {} : { data: true }),
-      }).sort({ file: 1 });
+      })
+      .sort({ file: 1 });
   }
 
   /**
@@ -297,7 +304,8 @@ export class GitDBIndex {
       .distinct('file', {
         table,
         indexingVersion: GitDBIndex.indexingVersion,
-      }).sort();
+      })
+      .sort();
     return files;
   }
 
@@ -400,19 +408,23 @@ export class GitDBIndex {
       const options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
       // Find the document
-      await this.mongo
+      const fileIndex: IFileIndex = await this.mongo
         .model<IFileIndex>('FileIndex')
         .findOneAndUpdate(query, update, options);
+      this.updateFileNodes(fileIndex);
     }
   }
 
   /**
    * Writes a new gitHash
    * @param gitHash The git hash to write to the index tracker.
-   * @returns 
+   * @returns
    */
-  public async writeIndexTracker(gitHash: string, changes: IChangedFile[]): Promise<IIndexTracker> {
-    console.log(`Writing index tracker for ${gitHash}`)
+  public async writeIndexTracker(
+    gitHash: string,
+    changes: IChangedFile[]
+  ): Promise<IIndexTracker> {
+    console.log(`Writing index tracker for ${gitHash}`);
     const indexTracker = await this.mongo
       .model<IIndexTracker>('IndexTracker')
       .findOneAndUpdate(
@@ -423,10 +435,58 @@ export class GitDBIndex {
             gitHash,
             indexingVersion: GitDBIndex.indexingVersion,
             date: new Date(),
-          }
+          },
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
     return indexTracker;
+  }
+
+  public static convertToIFileNodes(fileIndex: IFileIndex): IFileNode[] {
+    console.log(
+      `Converting file index to file nodes: ${fileIndex.table}/${fileIndex.file}`
+    );
+    const nodes: IFileNode[] = [];
+
+    function traverse(node: any, path: string) {
+      if (node.children && node.children.length > 0) {
+        node.children.forEach((child: any, index: number) => {
+          const childPath = `${path}.${index}.${child.type}`;
+          traverse(child, childPath);
+        });
+      }
+
+      const newNode: IFileNode = {
+        fileIndexId: fileIndex._id,
+        table: fileIndex.table,
+        file: fileIndex.file,
+        path: path,
+        date: fileIndex.date,
+      };
+
+      if (node.value !== undefined) {
+        newNode.value = node.value;
+      }
+
+      nodes.push(newNode);
+    }
+
+    // Start traversal from root
+    traverse(fileIndex.record, 'root');
+
+    return nodes;
+  }
+
+  public async updateFileNodes(fileIndex: IFileIndex): Promise<void> {
+    console.log(
+      `Updating file nodes for file index: ${fileIndex.table}/${fileIndex.file}`
+    );
+    console.log('Deleting existing file nodes');
+    await this.mongo
+      .model<IFileNode>('FileNode')
+      .deleteMany({ fileIndexId: fileIndex._id });
+    const nodes = GitDBIndex.convertToIFileNodes(fileIndex);
+    console.log(`Inserting ${nodes.length} file nodes`);
+    await this.mongo.model<IFileNode>('FileNode').insertMany(nodes);
   }
 }
