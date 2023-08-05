@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "85926801-656e-46d1-927f-4508deb577ea",
+		"_postman_id": "764c26c8-fc3e-43c9-b967-4e27ffaa4cb4",
 		"name": "Node-GitDB",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12150153",
-		"_collection_link": "https://solar-shuttle-782726.postman.co/workspace/Node-GitDB~f7af7469-07aa-4a5d-8389-809e686dee66/collection/12150153-85926801-656e-46d1-927f-4508deb577ea?action=share&creator=12150153&source=collection_link"
+		"_collection_link": "https://solar-shuttle-782726.postman.co/workspace/Node-GitDB~f7af7469-07aa-4a5d-8389-809e686dee66/collection/12150153-764c26c8-fc3e-43c9-b967-4e27ffaa4cb4?action=share&creator=12150153&source=collection_link"
 	},
 	"item": [
 		{
@@ -73,6 +73,39 @@
 			"response": []
 		},
 		{
+			"name": "Get Table Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.environment.set(\"file_name\", jsonData.files[0]);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get Table File Formats",
 			"event": [
 				{
@@ -100,6 +133,29 @@
 						"tables",
 						"{{table_name}}",
 						"{{file_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table File Complete JSON",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/json",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}",
+						"{{file_name}}",
+						"json"
 					]
 				}
 			},
