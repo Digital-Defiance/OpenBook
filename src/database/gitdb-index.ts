@@ -74,15 +74,47 @@ export class GitDBIndex {
         file,
         indexingVersion: GitDBIndex.indexingVersion,
       });
+      await this.mongo.model<IFileNode>('FileNode').deleteMany({
+        table,
+        file,
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
     } else if (table) {
       console.log(`Clearing index for ${table}`);
       await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
         table,
         indexingVersion: GitDBIndex.indexingVersion,
       });
+      await this.mongo.model<IFileNode>('FileNode').deleteMany({
+        table,
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
     } else {
       console.log(`Clearing all indices`);
       await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
+      await this.mongo.model<IFileNode>('FileNode').deleteMany({
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
+    }
+  }
+
+  public async clearIndicesForMissingFiles(): Promise<void> {
+    console.log(`Clearing indices for missing files`);
+    const tableNames = this.gitDb.getTables();
+    for (const tableName of tableNames) {
+      console.log(`Clearing indices for missing files in ${tableName}`)
+      const fileNames = this.gitDb.getTableFiles(tableName);
+      // delete indices where file is not in fileNames
+      await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+        table: tableName,
+        file: { $nin: fileNames },
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
+      await this.mongo.model<IFileNode>('FileNode').deleteMany({
+        table: tableName,
+        file: { $nin: fileNames },
         indexingVersion: GitDBIndex.indexingVersion,
       });
     }
@@ -96,6 +128,10 @@ export class GitDBIndex {
     const tableNames = this.gitDb.getTables();
     // delete indices where table is not in tableNames
     await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
+      table: { $nin: tableNames },
+      indexingVersion: GitDBIndex.indexingVersion,
+    });
+    await this.mongo.model<IFileNode>('FileNode').deleteMany({
       table: { $nin: tableNames },
       indexingVersion: GitDBIndex.indexingVersion,
     });
@@ -169,6 +205,24 @@ export class GitDBIndex {
       await this.updateIndicies(changes);
     }
     await this.clearIndicesForMissingTables();
+    await this.clearIndicesForMissingFiles();
+  }
+
+  public async getAggregateForTable(table: string, path: string): Promise<IFileNode[]> {
+    // find all matching table files with the path and value, sorted by file
+    const aggregates = await this.mongo
+      .model<IFileNode>('FileNode')
+      .find({ table, path, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
+      .sort('file');
+    return aggregates;
+  }
+
+  public async getAggregateNamesForTable(table: string): Promise<string[]> {
+    const aggregates = await this.mongo
+      .model<IFileNode>('FileNode')
+      .find({ table, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
+      .distinct('path').sort()
+    return aggregates;
   }
 
   /**
@@ -297,14 +351,19 @@ export class GitDBIndex {
    * @param table The table to get the files for.
    * @returns An array of file names.
    */
-  public async getTableFiles(table: string): Promise<string[]> {
+  public async getTableFiles(table: string, dataOnly = false): Promise<string[]> {
+    const query = {
+      table,
+      indexingVersion: GitDBIndex.indexingVersion,
+    };
+    if (dataOnly) {
+      query['data'] = true;
+    }
+
     // query mongo for all distinct file names, making sure indexingVersion matches
     const files = await this.mongo
       .model<IFileIndex>('FileIndex')
-      .distinct('file', {
-        table,
-        indexingVersion: GitDBIndex.indexingVersion,
-      })
+      .distinct('file', query)
       .sort();
     return files;
   }
@@ -411,7 +470,9 @@ export class GitDBIndex {
       const fileIndex: IFileIndex = await this.mongo
         .model<IFileIndex>('FileIndex')
         .findOneAndUpdate(query, update, options);
-      this.updateFileNodes(fileIndex);
+        if (fileIndex.data) {
+          await this.updateFileNodes(fileIndex);
+        }
     }
   }
 
@@ -446,6 +507,11 @@ export class GitDBIndex {
     console.log(
       `Converting file index to file nodes: ${fileIndex.table}/${fileIndex.file}`
     );
+    if (fileIndex.indexingVersion !== GitDBIndex.indexingVersion) {
+      throw new Error(
+        `File index has incorrect indexing version: ${fileIndex.indexingVersion}`
+      );
+    }
     const nodes: IFileNode[] = [];
 
     function traverse(node: any, path: string) {
@@ -457,10 +523,10 @@ export class GitDBIndex {
       }
 
       const newNode: IFileNode = {
-        fileIndexId: fileIndex._id,
         table: fileIndex.table,
         file: fileIndex.file,
         path: path,
+        indexingVersion: fileIndex.indexingVersion,
         date: fileIndex.date,
       };
 

@@ -5,6 +5,20 @@ import { GitDB } from '../database/gitdb';
 export function getQueryRouter(gitDb: GitDB) {
   const queryRouter = express.Router();
 
+  
+  queryRouter.get('/aggregate/:table', async (req, res) => {
+    const table = req.params.table;
+    const aggregates = gitDb.index.getAggregateNamesForTable(table);
+    res.send(aggregates);
+  });
+
+  queryRouter.get('/aggregate/:table/:path', async (req, res) => {
+    const table = req.params.table;
+    const path = req.params.path;
+    const aggregate = await gitDb.index.getAggregateForTable(table, path);
+    res.send(aggregate);
+  });
+
   queryRouter.get('/data/:table', async (req, res) => {
     const table = req.params.table;
     const indices = await gitDb.index.getTableFileIndices(table);
@@ -23,6 +37,7 @@ export function getQueryRouter(gitDb: GitDB) {
 
   queryRouter.get('/tables/:table', async (req, res) => {
     const table = req.params.table;
+    const dataOnly: boolean = req.query.dataOnly === 'true';
     try {
       const files = await gitDb.index.getTableFiles(table);
       res.send({ table, files });

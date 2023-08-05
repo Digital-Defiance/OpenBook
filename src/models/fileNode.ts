@@ -2,11 +2,11 @@ import { model, Model, Schema } from 'mongoose';
 import { IFileNode } from '../interfaces/fileNode';
 
 export const fileNodeSchema: Schema = new Schema({
-  fileIndexId: Schema.Types.ObjectId,
   table: String,
   file: String,
   path: String,
   value: { type: String, required: false },
+  indexingVersion: String,
   date: Date,
 });
 
