@@ -14,8 +14,15 @@ export class GitDBExcel {
         }
         const viewData = await this.gitDb.getCondensedView(table);
         const worksheet = workbook.addWorksheet(table);
+        let header = true;
         viewData.forEach(dataRow => {
             const row = worksheet.addRow(dataRow);
+            if (header) {
+                row.eachCell((cell, colNumber) => {
+                    cell.font = { bold: true };
+                });
+                header = false;
+            }
             row.commit();
         });
         worksheet.commit();
