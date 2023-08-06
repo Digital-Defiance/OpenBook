@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { OutputFormat } from '../enumerations/outputFormat';
 import { GitDB } from '../database/gitdb';
 
-export function getQueryRouter(gitDb: GitDB) {
+export function getRouter(gitDb: GitDB) {
   const queryRouter = Router();
 
   queryRouter.get('/aggregate/:table', async (req, res) => {

@@ -1,5 +1,6 @@
 import express from 'express';
-import { getQueryRouter } from './routers/query';
+import { getRouter as getExcelRouter } from './routers/excel';
+import { getRouter as getQueryRouter } from './routers/query';
 import { environment } from './environment';
 import { GitDB } from './database/gitdb';
 import { getModels } from './database/mongo';
@@ -17,8 +18,8 @@ app.use(express.json());
       console.log('Refreshing and updating indices');
       await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
-      const queryRouter = getQueryRouter(gitDb);
-      app.use('/query', queryRouter);
+      app.use('/excel', getExcelRouter(gitDb));
+      app.use('/query', getQueryRouter(gitDb));
       app.listen(environment.port, environment.host, () => {
         console.log(`[ ready ] http://${environment.host}:${environment.port}`);
       });
