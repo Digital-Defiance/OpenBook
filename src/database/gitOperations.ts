@@ -123,7 +123,7 @@ export class GitOperations {
     }
   }
 
-  public async getChangedFiles(sinceRevision: string): Promise<string[]> {
+  public async getChangedMarkdownFiles(sinceRevision: string): Promise<string[]> {
     console.log(`Checking for since revision: ${sinceRevision}`);
     const git = this.getSimpleGit();
   

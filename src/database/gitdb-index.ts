@@ -13,6 +13,7 @@ import {
   getRemarkToHtml,
   getRemarkToMarkdown,
 } from '../remark';
+import { IAggregateResponse } from '../interfaces/aggregateResponse';
 
 /**
  * GitDBIndex is a class responsible for handling the indexing of a GitDB
@@ -208,20 +209,26 @@ export class GitDBIndex {
     await this.clearIndicesForMissingFiles();
   }
 
+  public async getAggregateForTableByFile(table: string, paths: string[]): Promise<IAggregateResponse> {
+    const aggregates = await this.mongo
+      .model<IFileNode>('FileNode')
+      .find({ table, path: { $in: paths }, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
+      .sort('file');
+    const aggregatesByFile: { [file: string]: { [path: string]: any } } = {};
+    for (const aggregate of aggregates) {
+      if (!aggregatesByFile[aggregate.file]) {
+        aggregatesByFile[aggregate.file] = {};
+      }
+      aggregatesByFile[aggregate.file][aggregate.path] = aggregate.value.trim() ?? null;
+    }
+    return aggregatesByFile;
+  }
+
   public async getAggregateForTable(table: string, path: string): Promise<IFileNode[]> {
-    // find all matching table files with the path and value, sorted by file
     const aggregates = await this.mongo
       .model<IFileNode>('FileNode')
       .find({ table, path, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
       .sort('file');
-    return aggregates;
-  }
-
-  public async getAggregateNamesForTable(table: string): Promise<string[]> {
-    const aggregates = await this.mongo
-      .model<IFileNode>('FileNode')
-      .find({ table, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
-      .distinct('path').sort()
     return aggregates;
   }
 

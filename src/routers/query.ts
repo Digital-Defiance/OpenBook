@@ -1,21 +1,29 @@
-import express from 'express';
+import { Router } from 'express';
 import { OutputFormat } from '../enumerations/outputFormat';
 import { GitDB } from '../database/gitdb';
 
 export function getQueryRouter(gitDb: GitDB) {
-  const queryRouter = express.Router();
+  const queryRouter = Router();
 
-  
   queryRouter.get('/aggregate/:table', async (req, res) => {
     const table = req.params.table;
-    const aggregates = gitDb.index.getAggregateNamesForTable(table);
+    if (!gitDb.hasViewJson(table)) {
+      res.status(404).send({ error: `Table ${table} does not exist` });
+      return;
+    }
+    const viewRoot = gitDb.getViewJson(table);
+    const aggregates = gitDb.getViewPathsFromViewRoot(viewRoot);
     res.send(aggregates);
   });
 
   queryRouter.get('/aggregate/:table/:path', async (req, res) => {
     const table = req.params.table;
     const path = req.params.path;
-    const aggregate = await gitDb.index.getAggregateForTable(table, path);
+    if (!gitDb.hasViewJson(table)) {
+      res.status(404).send({ error: `Table ${table} does not exist` });
+      return;
+    }
+    const aggregate = await gitDb.getAggregateQueryResponse(table, path);
     res.send(aggregate);
   });
 
@@ -88,6 +96,34 @@ export function getQueryRouter(gitDb: GitDB) {
           return;
       }
       res.send({ table, file, content });
+    } catch (error) {
+      res.status(500).send({ error: `Error occurred: ${error.message}` });
+    }
+  });
+
+  queryRouter.get('/view/:table', async (req, res) => {
+    const table = req.params.table;
+    if (!gitDb.hasViewJson(table)) {
+      res.status(404);
+      return;
+    }
+    try {
+      const response = await gitDb.getRenderedView(table);
+      res.send(response);
+    } catch (error) {
+      res.status(500).send({ error: `Error occurred: ${error.message}` });
+    }
+  });
+
+  queryRouter.get('/view/:table/condensed', async (req, res) => {
+    const table = req.params.table;
+    if (!gitDb.hasViewJson(table)) {
+      res.status(404);
+      return;
+    }
+    try {
+      const response = await gitDb.getCondensedView(table);
+      res.send(response);
     } catch (error) {
       res.status(500).send({ error: `Error occurred: ${error.message}` });
     }

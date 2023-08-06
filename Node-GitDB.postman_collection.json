@@ -73,6 +73,39 @@
 			"response": []
 		},
 		{
+			"name": "Get Table Aggregates",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.environment.set(\"file_name\", jsonData.files[0]);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"tables",
+						"{{table_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get Table Data",
 			"event": [
 				{
@@ -225,6 +258,70 @@
 						"{{table_name}}",
 						"{{file_name}}",
 						"html"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table View",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/view/{{table_name}}",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"view",
+						"{{table_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table View Condensed",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/query/view/{{table_name}}",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"query",
+						"view",
+						"{{table_name}}"
 					]
 				}
 			},

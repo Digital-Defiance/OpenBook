@@ -1,15 +1,20 @@
-import { readdirSync, statSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { connect } from 'mongoose';
 import { join } from 'path';
 import { GitOperations } from './gitOperations';
 import { GitDBIndex } from './gitdb-index';
 import { environment } from '../environment';
+import { IAggregateResponse } from '../interfaces/aggregateResponse';
+import { IAggregateQueryResponse } from '../interfaces/aggregateQueryResponse';
+import { IFileNode } from '../interfaces/fileNode';
+import { IViewResponse } from '../interfaces/viewResponse';
+import { IViewRoot } from '../interfaces/viewRoot';
 
 /**
  * GitDB is the Git-based on-disk component of node-gitdb. It is responsible for
  * checking out the git repository containing the markdown formatted database
  * and providing methods to index (into mongo) and query the database.
- * 
+ *
  * GitDB refers to the on-disk part, and GitDBIndex refers to the mongo index.
  */
 export class GitDB {
@@ -28,8 +33,50 @@ export class GitDB {
     this.index = new GitDBIndex(this);
   }
 
+  /**
+   * Given a viewRoot and retrieved viewData, build a viewResponse
+   * @param viewRoot The viewRoot to use for mapping
+   * @param viewData The viewData to map
+   * @returns A viewResponse with the mapped data
+   */
+  public buildViewFromViewRootAndAggregates(
+    viewRoot: IViewRoot,
+    viewData: IAggregateResponse
+  ): IViewResponse {
+    const viewResponse: IViewResponse = {};
+    // for each file in the viewData, remap from path => value to column_name => value
+    // viewRoot has path => column_name
+    // viewData has file => [ { path => value } ]
+    // we want file => [ { column_name => value } ]
+    Object.keys(viewData).forEach((file) => {
+      viewResponse[file] = {};
+      Object.keys(viewData[file]).forEach((path) => {
+        const column_name = viewRoot[path];
+        viewResponse[file][column_name] = viewData[file][path] ?? '';
+      });
+    });
+    return viewResponse;
+  }
+
+  public condenseViewResponse(
+    viewRoot: IViewRoot,
+    viewResponse: IViewResponse
+  ): string[][] {
+    const headerRow: string[] = Object.values(viewRoot);
+    const rows: string[][] = [headerRow];
+    Object.keys(viewResponse).forEach((file) => {
+      const row = [];
+      // ensure every column has a value, as not every column may be in the viewResponse
+      headerRow.forEach((column) => {
+        row.push(viewResponse[file][column] ?? '');
+      });
+      rows.push(row);
+    });
+    return rows;
+  }
+
   public async getChangedFiles(sinceRevision: string): Promise<string[]> {
-    return await this.gitDatabase.getChangedFiles(sinceRevision);
+    return await this.gitDatabase.getChangedMarkdownFiles(sinceRevision);
   }
 
   /**
@@ -69,6 +116,25 @@ export class GitDB {
     });
   }
 
+  public getViewJson(table: string): IViewRoot {
+    if (!this.hasViewJson(table)) {
+      return {};
+    }
+    const viewJsonPath = join(this.gitDatabase.fullPath, table, 'view.json');
+    const viewJsonString = readFileSync(viewJsonPath, 'utf-8');
+    const viewJson = JSON.parse(viewJsonString) as IViewRoot;
+    return viewJson;
+  }
+
+  public getViewPathsFromViewRoot(viewRoot: IViewRoot): string[] {
+    return Object.keys(viewRoot);
+  }
+
+  public hasViewJson(table: string): boolean {
+    const viewJsonPath = join(this.gitDatabase.fullPath, table, 'view.json');
+    return existsSync(viewJsonPath);
+  }
+
   public async init() {
     await this.gitDatabase.ensureCheckedOutLatest();
     this.mongo = await connect(environment.mongo.uri);
@@ -80,5 +146,39 @@ export class GitDB {
     const gitDb = new GitDB(gitDatabase);
     await gitDb.init();
     return gitDb;
+  }
+
+  public async getAggregateQueryResponse(table: string, path: string): Promise<IAggregateQueryResponse[]> {
+    const aggregate: IFileNode[] = await this.index.getAggregateForTable(table, path);
+    const response: IAggregateQueryResponse[] = [];
+    for (const fileNode of aggregate) {
+      response.push({ 
+        file: fileNode.file,
+        value: fileNode.value,
+       });
+    }
+    return response;
+  }
+
+  public async getRenderedView(table: string): Promise<IViewResponse> {
+    const viewData = await this.getViewJson(table);
+    const paths = this.getViewPathsFromViewRoot(viewData);
+    const aggregate = await this.index.getAggregateForTableByFile(table, paths);
+    const response = this.buildViewFromViewRootAndAggregates(
+      viewData,
+      aggregate
+    );
+    return response;
+  }
+
+  public async getCondensedView(table: string): Promise<string[][]> {
+    const viewData = await this.getViewJson(table);
+    const paths = this.getViewPathsFromViewRoot(viewData);
+    const aggregate = await this.index.getAggregateForTableByFile(table, paths);
+    const response = this.buildViewFromViewRootAndAggregates(
+      viewData,
+      aggregate
+    );
+    return this.condenseViewResponse(viewData, response);
   }
 }
