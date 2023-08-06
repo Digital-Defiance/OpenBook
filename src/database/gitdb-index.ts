@@ -539,6 +539,8 @@ export class GitDBIndex {
 
       if (node.value !== undefined) {
         newNode.value = node.value;
+      } else if (node.checked !== undefined) {
+        newNode.value = node.checked ? 'true' : 'false';
       }
 
       nodes.push(newNode);
