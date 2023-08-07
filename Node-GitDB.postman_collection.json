@@ -232,7 +232,7 @@
 			"response": []
 		},
 		{
-			"name": "Get Table Aggregate Paths",
+			"name": "Get Table View Paths",
 			"event": [
 				{
 					"listen": "test",
@@ -264,7 +264,7 @@
 			"response": []
 		},
 		{
-			"name": "Get Table Path Aggregate",
+			"name": "Get Table View Path",
 			"event": [
 				{
 					"listen": "test",
