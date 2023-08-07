@@ -76,4 +76,4 @@ For example the above, when used on a template like this:
 
 ```
 
-when queried by the views endpoints will result in the 
+There are several view [endpoints](API.md#Views).

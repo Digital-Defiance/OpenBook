@@ -274,4 +274,4 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 #### GET /excel/:table_name
 
-​	Gets the [condensed](API.md#get-view-table_name-condensed) view as an excel spreadsheet in xlsx format.
+​	Gets the [condensed](API.md#get-viewtable_namecondensed) view as an excel spreadsheet in xlsx format.
