@@ -1,80 +1,214 @@
 FORMAT: 1A
-HOST: https://polls.apiblueprint.org/
+HOST: http://api.example.com
 
-# node-GitDb
+# node-gitdb API
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+## Group Tables
 
-## Questions Collection [/questions]
+### GET /tables 
 
-### List All Questions [GET]
++ Response 200 (application/json)
+
+        [
+            "Chapters",
+            "Donations",
+            "Expenses",
+            "Members",
+            "Projects"
+        ]
+
+### GET /tables/:table 
+
++ Parameters
+
+    + table: Members
+
++ Response 200 (application/json)
+
+        [
+            "BDisp.md",
+            "Brian G.md",
+            "Charles Shisler.md",
+            "Hannah Mulein.md",
+            "Jessica Mulein.md",
+            "Jon.md",
+            "Joseph Arceneaux.md",
+            "Rui Campos.md",
+            "Vijayee.md",
+            "template.md"
+        ]
+
+### GET /tables/data/:table 
+
++ Parameters
+
+    + table: Members
 
 + Response 200 (application/json)
 
         [
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
+                "type": "root",
+                "children": [
+                ...
+                ],
+                "position": {
+                    "start": {
+                        "line": 1,
+                        "column": 1,
+                        "offset": 0
+                    },
+                    "end": {
+                        "line": 9,
+                        "column": 1,
+                        "offset": 283
                     }
-                ]
+                }
             }
         ]
 
-### Create a New Question [POST]
+### GET /tables/:table_name/:file_name 
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
++ Parameters
 
-+ Request (application/json)
+    + table_name: Members
+    + file_name: Jessica Mulein.md
+
++ Response 200 (application/json)
+
+        [
+            "markdown",
+            "html",
+            "json"
+        ]
+
+### GET /tables/:table_name/:file_name/json 
+
++ Parameters
+
+    + table_name: Members
+    + file_name: Jessica Mulein.md
+
++ Response 200 (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
+            "type": "root",
+            "children": [
+            ...
+            ],
+            "position": {
+                "start": {
+                    "line": 1,
+                    "column": 1,
+                    "offset": 0
+                },
+                "end": {
+                    "line": 14,
+                    "column": 1,
+                    "offset": 472
+                }
+            }
         }
 
-+ Response 201 (application/json)
+### GET /tables/:table_name/:file_name/html 
 
-    + Headers
++ Parameters
 
-            Location: /questions/2
+    + table_name: Members
+    + file_name: Jessica Mulein.md
 
-    + Body
++ Response 200 (application/html)
 
+        <h1>Donation</h1>
+        <p><strong>Name:</strong> Donation to cover Charitable Organization Registration
+        ...
+
+### GET /tables/:table_name/:file_name/markdown 
+
++ Parameters
+
+    + table_name: Members
+    + file_name: Jessica Mulein.md
+
++ Response 200 (application/markdown)
+
+        # Donation
+
+        **Name:** Donation to cover Charitable Organization Registration
+        ...
+
+## Group Views
+
+### GET /view/:table_name 
+
++ Parameters
+
+    + table_name: Members
+
++ Response 200 (application/json)
+
+        {
+            ...
+            "Jessica Mulein.md": {
+                "Name": "Jessica Mulein",
+                ...
+            },
+            ...
+        }
+
+### GET /view/:table_name/paths 
+
++ Parameters
+
+    + table_name: Members
+
++ Response 200 (application/json)
+
+        [
+            "root.0.heading.0.text",
+            ...
+        ]
+
+### GET /view/:table_name/paths/:path 
+
++ Parameters
+
+    + table_name: Members
+    + path: root.0.heading.0.text
+
++ Response 200 (application/json)
+
+        [
+            ...
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
-            }
+                "file": "Jessica Mulein.md",
+                "value": "Jessica Mulein"
+            },
+            ...
+        ]
+
+### GET /view/:table_name/condensed 
+
++ Parameters
+
+    + table_name: Members
+
++ Response 200 (application/json)
+
+        [
+            [
+                "Name",
+                ...
+            ],
+            ...
+        ]
+
+## Group Excel
+
+### GET /excel/:table_name 
+
++ Parameters
+
+    + table_name: Members
+
++ Response 200 (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
