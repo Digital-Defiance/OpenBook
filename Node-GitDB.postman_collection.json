@@ -15,7 +15,7 @@
 					"script": {
 						"exec": [
 							"var jsonData = pm.response.json();\r",
-							"pm.environment.set(\"table_name\", jsonData.tables[0]);"
+							"pm.environment.set(\"table_name\", jsonData[0]);"
 						],
 						"type": "text/javascript"
 					}
@@ -157,28 +157,6 @@
 			"response": []
 		},
 		{
-			"name": "Get Table File Markdown",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}/{{file_name}}/markdown",
-					"protocol": "http",
-					"host": [
-						"{{HOST}}"
-					],
-					"port": "{{PORT}}",
-					"path": [
-						"tables",
-						"{{table_name}}",
-						"{{file_name}}",
-						"markdown"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Get Table File HTML",
 			"request": {
 				"method": "GET",
@@ -195,6 +173,28 @@
 						"{{table_name}}",
 						"{{file_name}}",
 						"html"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table File Markdown",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}/{{file_name}}/markdown",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"tables",
+						"{{table_name}}",
+						"{{file_name}}",
+						"markdown"
 					]
 				}
 			},
