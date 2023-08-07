@@ -8,6 +8,8 @@ The left hand side corresponds to the flattened nodes in the filenodes collectio
 
 If the node is a checkbox or a checked list item, the value will be 'true' or 'false'.
 
+## Example 1
+
 ```json
 {
     "root.0.heading.0.text": "Name",
@@ -76,6 +78,63 @@ For example the above, when used on a template like this:
 
 ```
 
+## 
+view.json:
+```json
+{
+    "root.0.heading.0.text": "Type",
+    "root.1.paragraph.1.text": "Name",
+    "root.1.paragraph.3.text": "Involved Party",
+    "root.1.paragraph.5.text": "Date",
+    "root.1.paragraph.7.text": "Description",
+    "root.1.paragraph.9.text": "Quantity",
+    "root.1.paragraph.11.text": "Item Amount",
+    "root.1.paragraph.13.text": "Total",
+    "root.1.paragraph.15.text": "Balance",
+    "root.1.paragraph.17.text": "Category",
+    "root.1.paragraph.19.text": "Memo",
+    "root.1.paragraph.21.text": "Reference Number"
+}
+```
+
+example view endpoint result:
+```json
+{
+    "20230220_credit_01.md": {
+        "Type": "Donation",
+        "Name": "Donation to cover Charitable Organization Registration",
+        "Item Amount": "$60.00",
+        "Total": "$60.00",
+        "Balance": "$60.00",
+        "Category": "Non Profit Income:Cash Donations",
+        "Memo": "State of Washington Corporations & Charities Division. Charitable Organization Registration.",
+        "Reference Number": "2023022000136199",
+        "Involved Party": "Jessica Mulein",
+        "Date": "2023-02-20",
+        "Description": "Donation to cover Charitable Organization Registration",
+        "Quantity": "1"
+    },
+    "20230220_debit_01.md": {
+        "Type": "Expense",
+        "Name": "Charitable Organization Registration",
+        "Item Amount": "-$60.00",
+        "Total": "-$60.00",
+        "Balance": "$0.00",
+        "Category": "Business Licenses and Registration",
+        "Memo": "State of Washington Corporations & Charities Division. Charitable Organization Registration.",
+        "Reference Number": "2023022000136199",
+        "Involved Party": "State of Washington",
+        "Date": "2023-02-20",
+        "Description": "Charitable Organization Registration fee",
+        "Quantity": "1"
+    }
+}
+```
+example excel:
+<img width="1248" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/b025f921-eeec-41b7-9521-fd8066ade025">
+
+
+## Endpoints
 There are several view [endpoints](API.md#Views).
 
 <img width="741" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/9b168dac-72cc-4506-99b1-acf58605fc52">
