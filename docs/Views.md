@@ -78,7 +78,8 @@ For example the above, when used on a template like this:
 
 ```
 
-## 
+## Example 2
+
 view.json:
 ```json
 {
