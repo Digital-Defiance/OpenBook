@@ -77,3 +77,15 @@ For example the above, when used on a template like this:
 ```
 
 There are several view [endpoints](API.md#Views).
+
+<img width="741" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/9b168dac-72cc-4506-99b1-acf58605fc52">
+
+<img width="739" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/d4f6ca40-4921-4f1d-84ed-0ed16eadf3f6">
+
+<img width="847" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/7804d71f-ef86-4852-bb1c-4a99e2edcae6">
+
+<img width="654" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/89286f17-c812-4b22-9d27-0704e5b8b503">
+
+
+
+
