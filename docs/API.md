@@ -49,7 +49,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
     {
         "type": "root",
         "children": [
-...
+        ...
         ],
         "position": {
             "start": {
@@ -145,6 +145,55 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ```
 
+### GET /tables/:table_name/paths
+
+​	Gets all of the distinct path names available for the table from the flattened filenodes collection
+
+```json
+[
+    "root.0.heading.0.text",
+    "root.1.paragraph.1.text",
+    "root.1.paragraph.3.text",
+    "root.1.paragraph.5.text",
+    "root.1.paragraph.7.text",
+    "root.1.paragraph.9.text",
+    "root.1.paragraph.11.text",
+    "root.1.paragraph.13.text",
+    "root.1.paragraph.16.link.0.text",
+    "root.1.paragraph.20.link.0.text",
+    "root.1.paragraph.23.text",
+    "root.1.paragraph.25.text",
+    "root.3.list.0.listItem",
+    "root.3.list.1.listItem",
+    "root.3.list.2.listItem",
+    "root.3.list.3.listItem",
+    "root.3.list.4.listItem",
+    "root.3.list.5.listItem",
+    "root.3.list.6.listItem",
+    "root.3.list.7.listItem",
+    "root.3.list.8.listItem",
+    "root.4.paragraph.1.text",
+    "root.4.paragraph.3.text"
+]
+```
+
+### GET /tables/:table_name/paths/:path
+
+​	Gets the associated columns for the given table path for all records in the table
+
+```json
+[
+    ...
+    {
+        "file": "Jessica Mulein.md",
+        "value": "Jessica Mulein"
+    },
+    ...
+]
+```
+
+
+
 ## Views
 
 ### GET /view/:table_name
@@ -186,7 +235,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /view/:table_name/paths
 
-​	Returns an array of the string column names from the view.json
+​	Returns an array of the string paths used in the table's view.json
 
 ```json
 [
@@ -213,21 +262,6 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
     "root.3.list.8.listItem",
     "root.4.paragraph.1.text",
     "root.4.paragraph.3.text"
-]
-```
-
-### GET /view/:table_name/paths/:path
-
-​	Gets the associated columns for the given table view path for all records in the table
-
-```json
-[
-    ...
-    {
-        "file": "Jessica Mulein.md",
-        "value": "Jessica Mulein"
-    },
-    ...
 ]
 ```
 
@@ -292,9 +326,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-## Excel
-
-### GET /excel/:table_name
+### GET /view/:table_name/excel
 
 ​	Gets the [condensed](API.md#get-viewtable_namecondensed) view as an excel spreadsheet in xlsx format.
 

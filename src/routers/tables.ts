@@ -65,5 +65,18 @@ export function getRouter(gitDb: GitDB) {
     res.send(content);
   });
 
+  queryRouter.get('/:table/paths', async (req, res) => {
+    const table = req.params.table;
+    const paths = await gitDb.index.getPathsForTable(table);
+    res.send(paths);
+  });
+
+  queryRouter.get('/:table/paths/:path', async (req, res) => {
+    const table = req.params.table;
+    const path = req.params.path;
+    const aggregate = await gitDb.index.getPathAggregateQueryResponse(table, path);
+    res.send(aggregate);
+  });
+
   return queryRouter;
 }

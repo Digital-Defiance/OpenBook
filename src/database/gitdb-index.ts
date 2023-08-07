@@ -227,7 +227,7 @@ export class GitDBIndex {
     return aggregatesByFile;
   }
 
-  public async getAggregateForTable(table: string, path: string): Promise<IFileNode[]> {
+  public async getPathAggregateForTable(table: string, path: string): Promise<IFileNode[]> {
     const aggregates = await this.mongo
       .model<IFileNode>('FileNode')
       .find({ table, path, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
@@ -610,8 +610,8 @@ export class GitDBIndex {
     return rows;
   }
 
-  public async getAggregateQueryResponse(table: string, path: string): Promise<IAggregateQueryResponse[]> {
-    const aggregate: IFileNode[] = await this.getAggregateForTable(table, path);
+  public async getPathAggregateQueryResponse(table: string, path: string): Promise<IAggregateQueryResponse[]> {
+    const aggregate: IFileNode[] = await this.getPathAggregateForTable(table, path);
     const response: IAggregateQueryResponse[] = [];
     for (const fileNode of aggregate) {
       response.push({ 
@@ -620,6 +620,14 @@ export class GitDBIndex {
        });
     }
     return response;
+  }
+
+  public async getPathsForTable(table: string): Promise<string[]> {
+    const paths = await this.mongo.model<IFileNode>('FileNode').distinct('path', {
+      table,
+      indexingVersion: GitDBIndex.indexingVersion,
+    });
+    return paths;
   }
 
   public async getRenderedView(table: string): Promise<IViewResponse> {

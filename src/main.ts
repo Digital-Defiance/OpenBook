@@ -1,5 +1,4 @@
 import express from 'express';
-import { getRouter as getExcelRouter } from './routers/excel';
 import { getRouter as getTablesRouter } from './routers/tables';
 import { getRouter as getViewRouter } from './routers/view';
 import { environment } from './environment';
@@ -19,7 +18,6 @@ app.use(express.json());
       console.log('Refreshing and updating indices');
       await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
-      app.use('/excel', getExcelRouter(gitDb));
       app.use('/tables', getTablesRouter(gitDb));
       app.use('/view', getViewRouter(gitDb));
       app.listen(environment.port, environment.host, () => {

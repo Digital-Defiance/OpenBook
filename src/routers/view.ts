@@ -1,3 +1,4 @@
+import exceljs from 'exceljs';
 import { Router } from 'express';
 import { GitDB } from '../database/gitdb';
 
@@ -16,6 +17,25 @@ export function getRouter(gitDb: GitDB) {
     } catch (error) {
       res.status(500).send({ error: `Error occurred: ${error.message}` });
     }
+  });
+
+  viewRouter.get('/:table/excel', async (req, res) => {
+    const table = req.params.table;
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=' + `${table}.xlsx`
+    );
+    const workbook = new exceljs.stream.xlsx.WorkbookWriter({
+      stream: res,
+      useStyles: true,
+      useSharedStrings: true,
+    });
+    await gitDb.excel.getViewAsExcel(table, workbook);
+    await workbook.commit();
   });
 
   viewRouter.get('/:table/condensed', async (req, res) => {
@@ -41,17 +61,6 @@ export function getRouter(gitDb: GitDB) {
     const viewRoot = gitDb.getViewJson(table);
     const aggregates = gitDb.getViewPathsFromViewRoot(viewRoot);
     res.send(aggregates);
-  });
-
-  viewRouter.get('/:table/paths/:path', async (req, res) => {
-    const table = req.params.table;
-    const path = req.params.path;
-    if (!gitDb.hasViewJson(table)) {
-      res.status(404).send({ error: `Table ${table} does not exist` });
-      return;
-    }
-    const aggregate = await gitDb.index.getAggregateQueryResponse(table, path);
-    res.send(aggregate);
   });
 
   return viewRouter;
