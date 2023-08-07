@@ -40,7 +40,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ​	the /tables/:table endpoint returns the file names directly off the disk, not using the mongo index
 
-### GET /tables/data/:table
+### GET /tables/:table/data
 
 ​	gets an array of the root nodes for all of the files in the table
 
@@ -67,7 +67,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-### GET /tables/:table_name/:file_name
+### GET /tables/:table_name/files/:file_name
 
 ​	returns the available formats for the given table/file
 
@@ -79,7 +79,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-### GET /tables/:table_name/:file_name/json
+### GET /tables/:table_name/files/:file_name/json
 
 ​	returns the JSON format of the requested file
 
@@ -104,7 +104,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 }
 ```
 
-### GET /tables/:table_name/:file_name/html
+### GET /tables/:table_name/files/:file_name/html
 
 ​	returns the HTML format of the requested file
 
@@ -124,7 +124,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 	<strong>Reference Number:</strong> 2023022000136199</p>
 ```
 
-### GET /tables/:table_name/:file_name/markdown
+### GET /tables/:table_name/files/:file_name/markdown
 
 ​	returns the Markdown format of the requested file
 

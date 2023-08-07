@@ -14,14 +14,14 @@ export function getRouter(gitDb: GitDB) {
     }
   });
 
-  queryRouter.get('/data/:table', async (req, res) => {
+  queryRouter.get('/:table/data', async (req, res) => {
     const table = req.params.table;
     const indices = await gitDb.index.getTableFileIndices(table);
     const data = indices.map((index) => index.record);
     res.send(data);
   });
 
-  queryRouter.get('/:table', async (req, res) => {
+  queryRouter.get('/:table/files', async (req, res) => {
     const table = req.params.table;
     const dataOnly: boolean = req.query.dataOnly === 'true';
     try {
@@ -32,13 +32,13 @@ export function getRouter(gitDb: GitDB) {
     }
   });
 
-  queryRouter.get('/:table/:file', async (req, res) => {
+  queryRouter.get('/:table/files/:file', async (req, res) => {
     // get the values of OutputFormat and return as an array
     const values = Object.values(OutputFormat);
     res.json(values);
   });
 
-  queryRouter.get('/:table/:file/json', async (req, res) => {
+  queryRouter.get('/:table/files/:file/json', async (req, res) => {
     const { table, file } = req.params;
     const content = JSON.stringify(
       await gitDb.index.getTableFileIndexRoot(table, file)
@@ -49,7 +49,7 @@ export function getRouter(gitDb: GitDB) {
   });
 
   
-  queryRouter.get('/:table/:file/html', async (req, res) => {
+  queryRouter.get('/:table/files/:file/html', async (req, res) => {
     const { table, file } = req.params;
     const content = await gitDb.index.getTableFileIndexHtml(table, file);
     res.setHeader('Content-Type', 'text/html');
