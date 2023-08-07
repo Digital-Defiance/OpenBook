@@ -1,6 +1,5 @@
 import { Workbook, Worksheet } from 'exceljs';
-import { Stream } from "stream";
-import { GitDB } from "./database/gitdb";
+import { GitDB } from './gitdb';
 
 export class GitDBExcel {
     private gitDb: GitDB;

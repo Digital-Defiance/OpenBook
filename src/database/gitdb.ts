@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { connect } from 'mongoose';
 import { join } from 'path';
 import { GitOperations } from './gitOperations';
-import { GitDBExcel } from '../excel';
+import { GitDBExcel } from './excel';
 import { GitDBIndex } from './gitdb-index';
 import { environment } from '../environment';
 import { IAggregateResponse } from '../interfaces/aggregateResponse';
