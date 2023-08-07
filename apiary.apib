@@ -37,7 +37,7 @@ FORMAT: 1A
             "template.md"
         ]
 
-### GET /tables/data/:table 
+### GET /tables/:table/data 
 
 + Parameters
 
@@ -66,7 +66,7 @@ FORMAT: 1A
             }
         ]
 
-### GET /tables/:table_name/:file_name 
+### GET /tables/:table_name/files/:file_name 
 
 + Parameters
 
@@ -81,7 +81,7 @@ FORMAT: 1A
             "json"
         ]
 
-### GET /tables/:table_name/:file_name/json 
+### GET /tables/:table_name/files/:file_name/json 
 
 + Parameters
 
@@ -109,7 +109,7 @@ FORMAT: 1A
             }
         }
 
-### GET /tables/:table_name/:file_name/html 
+### GET /tables/:table_name/files/:file_name/html 
 
 + Parameters
 
@@ -122,7 +122,7 @@ FORMAT: 1A
         <p><strong>Name:</strong> Donation to cover Charitable Organization Registration
         ...
 
-### GET /tables/:table_name/:file_name/markdown 
+### GET /tables/:table_name/files/:file_name/markdown 
 
 + Parameters
 
@@ -202,9 +202,7 @@ FORMAT: 1A
             ...
         ]
 
-## Group Excel
-
-### GET /excel/:table_name 
+### GET /view/:table_name/excel 
 
 + Parameters
 
