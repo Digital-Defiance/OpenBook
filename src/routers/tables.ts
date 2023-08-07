@@ -18,7 +18,7 @@ export function getRouter(gitDb: GitDB) {
     const table = req.params.table;
     const indices = await gitDb.index.getTableFileIndices(table);
     const data = indices.map((index) => index.record);
-    res.send({ table, data });
+    res.send(data);
   });
 
   queryRouter.get('/:table', async (req, res) => {
@@ -26,7 +26,7 @@ export function getRouter(gitDb: GitDB) {
     const dataOnly: boolean = req.query.dataOnly === 'true';
     try {
       const files = await gitDb.index.getTableFiles(table, dataOnly);
-      res.send({ table, files });
+      res.send(files);
     } catch (error) {
       res.status(500).send({ error: `Error occurred: ${error.message}` });
     }
@@ -43,20 +43,26 @@ export function getRouter(gitDb: GitDB) {
     const content = JSON.stringify(
       await gitDb.index.getTableFileIndexRoot(table, file)
     );
-    res.send({ table, file, content });
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=${file}.json`);
+    res.send(content);
   });
 
   
   queryRouter.get('/:table/:file/html', async (req, res) => {
     const { table, file } = req.params;
     const content = await gitDb.index.getTableFileIndexHtml(table, file);
-    res.send({ table, file, content });
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `attachment; filename=${file}.html`);
+    res.send(content);
   });
 
   queryRouter.get('/:table/:file/markdown', async (req, res) => {
     const { table, file } = req.params;
     const content = await gitDb.index.getTableFileIndexMarkdown(table, file);
-    res.send({ table, file, content });
+    res.setHeader('Content-Type', 'text/markdown');
+    res.setHeader('Content-Disposition', `attachment; filename=${file}.md`);
+    res.send(content);
   });
 
   return queryRouter;

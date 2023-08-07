@@ -2,11 +2,9 @@
 
 Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://github.com/Digital-Defiance/node-gitdb/blob/main/Node-GitDB.postman_collection.json)
 
-## Endpoints
+## Tables
 
-### Tables
-
-#### GET /tables
+### GET /tables
 
 ​	the /tables endpoint returns the table names directly off the disk, not using the mongo index
 ​	these are relative to the mountpoint/path options of the GitDB, they may or may not contain records
@@ -21,61 +19,55 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-#### GET /tables/:table
+### GET /tables/:table
 
 ​	i.e. GET /tables/Members
 
 ```json
-{
-    "table": "Members",
-    "files": [
-        "BDisp.md",
-        "Brian G.md",
-        "Charles Shisler.md",
-        "Hannah Mulein.md",
-        "Jessica Mulein.md",
-        "Jon.md",
-        "Joseph Arceneaux.md",
-        "Rui Campos.md",
-        "Vijayee.md",
-        "template.md"
-    ]
-}
+[
+    "BDisp.md",
+    "Brian G.md",
+    "Charles Shisler.md",
+    "Hannah Mulein.md",
+    "Jessica Mulein.md",
+    "Jon.md",
+    "Joseph Arceneaux.md",
+    "Rui Campos.md",
+    "Vijayee.md",
+    "template.md"
+]
 ```
 
 ​	the /tables/:table endpoint returns the file names directly off the disk, not using the mongo index
 
-#### GET /tables/data/:table
+### GET /tables/data/:table
 
 ​	gets an array of the root nodes for all of the files in the table
 
 ```json
-{
-    "table": "Members",
-    "data": [
-        {
-            "type": "root",
-            "children": [
+[
+    {
+        "type": "root",
+        "children": [
 ...
-            ],
-            "position": {
-                "start": {
-                    "line": 1,
-                    "column": 1,
-                    "offset": 0
-                },
-                "end": {
-                    "line": 9,
-                    "column": 1,
-                    "offset": 283
-                }
+        ],
+        "position": {
+            "start": {
+                "line": 1,
+                "column": 1,
+                "offset": 0
+            },
+            "end": {
+                "line": 9,
+                "column": 1,
+                "offset": 283
             }
         }
-    ]
-}
+    }
+]
 ```
 
-#### GET /tables/:table_name/:file_name
+### GET /tables/:table_name/:file_name
 
 ​	returns the available formats for the given table/file
 
@@ -87,45 +79,75 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-#### GET /tables/:table_name/:file_name/json
+### GET /tables/:table_name/:file_name/json
 
 ​	returns the JSON format of the requested file
 
 ```json
 {
-    "table": "Members",
-    "file": "template.md",
-    "content": "{\"type\":\"root\",\"children\":[...],\"position\":{\"start\":{\"line\":1,\"column\":1,\"offset\":0},\"end\":{\"line\":36,\"column\":28,\"offset\":765}}}"
+    "type": "root",
+    "children": [
+    ...
+    ],
+    "position": {
+        "start": {
+            "line": 1,
+            "column": 1,
+            "offset": 0
+        },
+        "end": {
+            "line": 14,
+            "column": 1,
+            "offset": 472
+        }
+    }
 }
 ```
 
-#### GET /tables/:table_name/:file_name/html
+### GET /tables/:table_name/:file_name/html
 
 ​	returns the HTML format of the requested file
 
-```json
-{
-    "table": "Members",
-    "file": "BDisp.md",
-    "content": "<h1>Jessica Mulein</h1>\n..."
-}
+```html
+<h1>Donation</h1>
+<p><strong>Name:</strong> Donation to cover Charitable Organization Registration
+	<strong>Involved Party:</strong> Jessica Mulein
+	<strong>Date:</strong> 2023-02-20
+	<strong>Description:</strong> Donation to cover Charitable Organization Registration
+	<strong>Quantity:</strong> 1
+	<strong>Item Amount:</strong> $60.00
+	<strong>Total:</strong> $60.00
+	<strong>Balance:</strong> $60.00
+	<strong>Category:</strong> Non Profit Income:Cash Donations
+	<strong>Memo:</strong> State of Washington Corporations &#x26; Charities Division. Charitable Organization
+	Registration.
+	<strong>Reference Number:</strong> 2023022000136199</p>
 ```
 
-#### GET /tables/:table_name/:file_name/markdown
+### GET /tables/:table_name/:file_name/markdown
 
 ​	returns the Markdown format of the requested file
 
-```json
-{
-    "table": "Members",
-    "file": "BDisp.md",
-    "content": "# Jessica Mulein\n..."
-}
+```markdown
+# Donation
+
+**Name:** Donation to cover Charitable Organization Registration
+**Involved Party:** Jessica Mulein
+**Date:** 2023-02-20
+**Description:** Donation to cover Charitable Organization Registration
+**Quantity:** 1
+**Item Amount:** $60.00
+**Total:** $60.00
+**Balance:** $60.00
+**Category:** Non Profit Income:Cash Donations
+**Memo:** State of Washington Corporations & Charities Division. Charitable Organization Registration.
+**Reference Number:** 2023022000136199
+
 ```
 
-### Views
+## Views
 
-#### GET /view/:table_name
+### GET /view/:table_name
 
 ​	Gets the associated view data for the given table, if a view.json exists for the table.
 ​	Response format is an object keyed by filename and then the path => column name from the view.json is keyed as column_name => value. Checkboxes return true or false. Data is whitespace trimmed.
@@ -162,7 +184,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 }
 ```
 
-#### GET /view/:table_name/paths
+### GET /view/:table_name/paths
 
 ​	Returns an array of the string column names from the view.json
 
@@ -194,7 +216,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-#### GET /view/:table_name/paths/:path
+### GET /view/:table_name/paths/:path
 
 ​	Gets the associated columns for the given table view path for all records in the table
 
@@ -209,7 +231,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-#### GET /view/:table_name/condensed
+### GET /view/:table_name/condensed
 
 ​	Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
 
@@ -270,9 +292,9 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-### Excel
+## Excel
 
-#### GET /excel/:table_name
+### GET /excel/:table_name
 
 ​	Gets the [condensed](API.md#get-viewtable_namecondensed) view as an excel spreadsheet in xlsx format.
 
