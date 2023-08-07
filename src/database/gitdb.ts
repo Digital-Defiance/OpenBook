@@ -36,48 +36,6 @@ export class GitDB {
     this.excel = new GitDBExcel(this);
   }
 
-  /**
-   * Given a viewRoot and retrieved viewData, build a viewResponse
-   * @param viewRoot The viewRoot to use for mapping
-   * @param viewData The viewData to map
-   * @returns A viewResponse with the mapped data
-   */
-  public buildViewFromViewRootAndAggregates(
-    viewRoot: IViewRoot,
-    viewData: IAggregateResponse
-  ): IViewResponse {
-    const viewResponse: IViewResponse = {};
-    // for each file in the viewData, remap from path => value to column_name => value
-    // viewRoot has path => column_name
-    // viewData has file => [ { path => value } ]
-    // we want file => [ { column_name => value } ]
-    Object.keys(viewData).forEach((file) => {
-      viewResponse[file] = {};
-      Object.keys(viewData[file]).forEach((path) => {
-        const column_name = viewRoot[path];
-        viewResponse[file][column_name] = viewData[file][path] ?? '';
-      });
-    });
-    return viewResponse;
-  }
-
-  public condenseViewResponse(
-    viewRoot: IViewRoot,
-    viewResponse: IViewResponse
-  ): string[][] {
-    const headerRow: string[] = Object.values(viewRoot);
-    const rows: string[][] = [headerRow];
-    Object.keys(viewResponse).forEach((file) => {
-      const row = [];
-      // ensure every column has a value, as not every column may be in the viewResponse
-      headerRow.forEach((column) => {
-        row.push(viewResponse[file][column] ?? '');
-      });
-      rows.push(row);
-    });
-    return rows;
-  }
-
   public async getChangedFiles(sinceRevision: string): Promise<string[]> {
     return await this.gitDatabase.getChangedMarkdownFiles(sinceRevision);
   }
@@ -100,8 +58,10 @@ export class GitDB {
       if (stat.isDirectory()) {
         // ignore nested directories
         console.log(`Ignoring nested directory: ${relativePath}`);
-      } else {
+      } else if (file.endsWith('.md')) {
         returnedFiles.push(file);
+      } else {
+        console.log(`Ignoring file: ${relativePath}`);
       }
     });
     return returnedFiles;
@@ -149,39 +109,5 @@ export class GitDB {
     const gitDb = new GitDB(gitDatabase);
     await gitDb.init();
     return gitDb;
-  }
-
-  public async getAggregateQueryResponse(table: string, path: string): Promise<IAggregateQueryResponse[]> {
-    const aggregate: IFileNode[] = await this.index.getAggregateForTable(table, path);
-    const response: IAggregateQueryResponse[] = [];
-    for (const fileNode of aggregate) {
-      response.push({ 
-        file: fileNode.file,
-        value: fileNode.value,
-       });
-    }
-    return response;
-  }
-
-  public async getRenderedView(table: string): Promise<IViewResponse> {
-    const viewData = await this.getViewJson(table);
-    const paths = this.getViewPathsFromViewRoot(viewData);
-    const aggregate = await this.index.getAggregateForTableByFile(table, paths);
-    const response = this.buildViewFromViewRootAndAggregates(
-      viewData,
-      aggregate
-    );
-    return response;
-  }
-
-  public async getCondensedView(table: string): Promise<string[][]> {
-    const viewData = await this.getViewJson(table);
-    const paths = this.getViewPathsFromViewRoot(viewData);
-    const aggregate = await this.index.getAggregateForTableByFile(table, paths);
-    const response = this.buildViewFromViewRootAndAggregates(
-      viewData,
-      aggregate
-    );
-    return this.condenseViewResponse(viewData, response);
   }
 }

@@ -25,14 +25,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables",
+					"raw": "http://{{HOST}}:{{PORT}}/tables",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"tables"
 					]
 				}
@@ -57,47 +56,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}",
+					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
-						"tables",
-						"{{table_name}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Table Aggregates",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"var jsonData = pm.response.json();\r",
-							"pm.environment.set(\"file_name\", jsonData.files[0]);"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}",
-					"protocol": "http",
-					"host": [
-						"{{HOST}}"
-					],
-					"port": "{{PORT}}",
-					"path": [
-						"query",
 						"tables",
 						"{{table_name}}"
 					]
@@ -112,8 +77,7 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"var jsonData = pm.response.json();\r",
-							"pm.environment.set(\"file_name\", jsonData.files[0]);"
+							""
 						],
 						"type": "text/javascript"
 					}
@@ -123,15 +87,15 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}",
+					"raw": "http://{{HOST}}:{{PORT}}/tables/data/{{table_name}}",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"tables",
+						"data",
 						"{{table_name}}"
 					]
 				}
@@ -155,40 +119,16 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}",
+					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}/{{file_name}}",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"tables",
 						"{{table_name}}",
 						"{{file_name}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Table File Complete JSON",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/json",
-					"protocol": "http",
-					"host": [
-						"{{HOST}}"
-					],
-					"port": "{{PORT}}",
-					"path": [
-						"query",
-						"tables",
-						"{{table_name}}",
-						"{{file_name}}",
-						"json"
 					]
 				}
 			},
@@ -200,14 +140,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/json",
+					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}/{{file_name}}/json",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"tables",
 						"{{table_name}}",
 						"{{file_name}}",
@@ -223,14 +162,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/markdown",
+					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}/{{file_name}}/markdown",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"tables",
 						"{{table_name}}",
 						"{{file_name}}",
@@ -246,14 +184,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/tables/{{table_name}}/{{file_name}}/html",
+					"raw": "http://{{HOST}}:{{PORT}}/tables/{{table_name}}/{{file_name}}/html",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"tables",
 						"{{table_name}}",
 						"{{file_name}}",
@@ -280,16 +217,80 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/view/{{table_name}}",
+					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"view",
 						"{{table_name}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table Aggregate Paths",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}/paths",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"view",
+						"{{table_name}}",
+						"paths"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Table Path Aggregate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}/paths/root.0.heading.0.text",
+					"protocol": "http",
+					"host": [
+						"{{HOST}}"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"view",
+						"{{table_name}}",
+						"paths",
+						"root.0.heading.0.text"
 					]
 				}
 			},
@@ -312,16 +313,16 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/query/view/{{table_name}}",
+					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}/condensed",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"query",
 						"view",
-						"{{table_name}}"
+						"{{table_name}}",
+						"condensed"
 					]
 				}
 			},

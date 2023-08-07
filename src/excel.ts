@@ -12,7 +12,7 @@ export class GitDBExcel {
         if (!this.gitDb.hasViewJson(table)) {
             throw new Error(`Table ${table} does not exist`);
         }
-        const viewData = await this.gitDb.getCondensedView(table);
+        const viewData = await this.gitDb.index.getCondensedView(table);
         const worksheet = workbook.addWorksheet(table);
         let header = true;
         viewData.forEach(dataRow => {
