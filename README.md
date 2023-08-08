@@ -1,5 +1,6 @@
 # node-GitDB
 
+![node-GitDB@4x](https://github.com/Digital-Defiance/node-gitdb/assets/3766240/e5981501-b938-458b-874a-2eff12d3d9b9)
 
 Note: node-GitDB is in beta, is incomplete, and undergoing development. (See [#Complete](#Complete))
 
