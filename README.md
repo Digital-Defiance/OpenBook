@@ -16,6 +16,10 @@ Internally we use [remark - npm (npmjs.com)](https://www.npmjs.com/package/remar
 
 Once imported, our Node express [API](docs/API.md) performs some essential queries and functions on the mongo data. Data is easily moved between markdown, json, html, and it can also output Excel files from a feature we call [Views](docs/Views.md).
 
+Here is an example Excel file generated from the raw markdown entries in our [https://github.com/Digital-Defiance/Digital-Defiance/tree/main/Public%20Data/2023%20Cash%20Flow](Digital-Defiance repo).
+![image](https://github.com/Digital-Defiance/node-gitdb/assets/3766240/a6a5a692-1584-4c4e-84d2-2e82c98e8de2)
+
+
 ## Rationale
 
 As a non-profit, most of what Digital Defiance does needs to be public. node-GitDB is a way to store data in a way that is version controlled, human-readable,
