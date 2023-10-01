@@ -1,14 +1,11 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
+import moment from 'moment';
 import { connect } from 'mongoose';
 import { join } from 'path';
 import { GitOperations } from './gitOperations';
 import { GitDBExcel } from './excel';
 import { GitDBIndex } from './gitdb-index';
 import { environment } from '../environment';
-import { IAggregateResponse } from '../interfaces/aggregateResponse';
-import { IAggregateQueryResponse } from '../interfaces/aggregateQueryResponse';
-import { IFileNode } from '../interfaces/fileNode';
-import { IViewResponse } from '../interfaces/viewResponse';
 import { IViewRoot } from '../interfaces/viewRoot';
 
 /**
@@ -40,6 +37,63 @@ export class GitDB {
     return await this.gitDatabase.getChangedMarkdownFiles(sinceRevision);
   }
 
+  public static alphaSort(a: string, b: string): number {
+    if (a === '_top.md') return -1;
+    if (b === '_top.md') return 1;
+    if (a === '_bottom.md') return 1;
+    if (b === '_bottom.md') return -1;
+
+    // Extract potential date strings using regex
+    const dateRegex = /(\d{2}-\d{2}-\d{4}|\d{8}|\d{4}-\d{2}-\d{2})/;
+    const aDateMatch = a.match(dateRegex);
+    const bDateMatch = b.match(dateRegex);
+
+    const aDate = aDateMatch
+      ? moment(aDateMatch[0], ['MM-DD-YYYY', 'MMDDYYYY', 'YYYY-MM-DD'])
+      : null;
+    const bDate = bDateMatch
+      ? moment(bDateMatch[0], ['MM-DD-YYYY', 'MMDDYYYY', 'YYYY-MM-DD'])
+      : null;
+
+    if (aDate && aDate.isValid() && bDate && bDate.isValid()) {
+      return aDate.diff(bDate);
+    }
+
+    const aNumbers = a.match(/\d+/g);
+    const bNumbers = b.match(/\d+/g);
+    const aLastNumber = aNumbers
+      ? parseInt(aNumbers[aNumbers.length - 1], 10)
+      : null;
+    const bLastNumber = bNumbers
+      ? parseInt(bNumbers[bNumbers.length - 1], 10)
+      : null;
+
+    if (aLastNumber !== null && bLastNumber !== null) {
+      const numberComparison = aLastNumber - bLastNumber;
+      if (numberComparison !== 0) {
+        return numberComparison;
+      }
+    } else if (aLastNumber !== null) {
+      return -1;
+    } else if (bLastNumber !== null) {
+      return 1;
+    }
+
+    // If numbers are the same or there are no numbers, sort alphabetically
+    return a.localeCompare(b);
+  }
+
+  public static collectionSort<T extends Record<string, any>>(
+    collection: T[],
+    columnName: keyof T
+  ): void {
+    collection.sort((itemA, itemB) => {
+      const valueA = String(itemA[columnName]);
+      const valueB = String(itemB[columnName]);
+      return GitDB.alphaSort(valueA, valueB);
+    });
+  }
+
   /**
    * Recurse into the specified table and return a list of all files
    */
@@ -48,6 +102,11 @@ export class GitDB {
     const tablePath = join(this.gitDatabase.fullPath, table);
     const files = readdirSync(tablePath);
     const returnedFiles: string[] = [];
+    // do a human numeric sort on the files from readdir
+    // place _top at the top and _bottom at the bottom
+    // try to sort a file before b file, etc.
+    // file 1 should be before file 100
+    files.sort((a, b) => GitDB.alphaSort(a, b));
     files.forEach((file) => {
       if (file.startsWith('.')) {
         return;
@@ -73,6 +132,7 @@ export class GitDB {
    */
   public getTables(): string[] {
     const tables = readdirSync(this.gitDatabase.fullPath);
+    tables.sort((a, b) => GitDB.alphaSort(a, b));
     return tables.filter((table) => {
       const fullPath = join(this.gitDatabase.fullPath, table);
       return statSync(fullPath).isDirectory() && !table.startsWith('.');
