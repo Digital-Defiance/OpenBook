@@ -1,4 +1,4 @@
-import { Workbook, Worksheet } from 'exceljs';
+import { Cell, Workbook, Worksheet } from 'exceljs';
 import { GitDB } from './gitdb';
 
 export class GitDBExcel {
@@ -38,19 +38,35 @@ export class GitDBExcel {
         const worksheet = workbook.addWorksheet(table);
         let header = true;
         viewData.forEach((dataRow, rowIndex) => {
-            const processedRow = dataRow.map(cellData => {
-                if (typeof cellData === 'string' && cellData.startsWith('=')) {
-                    // If it's an equation, return it as a formula object without the '=' prefix
-                    return { formula: this.performSubstitutions(cellData.substring(1), rowIndex, viewData.length) };
-                }
-                return cellData;
-            });
-            const row = worksheet.addRow(processedRow);
+            const row = worksheet.addRow(dataRow);
             if (header) {
                 row.eachCell((cell, colNumber) => {
                     cell.font = { bold: true };
                 });
                 header = false;
+            } else {
+                row.eachCell((cell: Cell, colNumber: number) => {
+                    // if the cell starts with =, it is a formula, we need to perform substitutions
+                    // if the cell starts with =$, it is a formula, but we need to format it as currency 
+                    // if the cell starts with $ or -$, we need to interpret it as a number but format it as a currency
+
+                    const cellValue = cell.value.toString();
+                    if (cellValue.startsWith('=$')) {
+                        cell.value = <any>{
+                            formula: this.performSubstitutions(cellValue.substring(2), rowIndex, viewData.length),
+                            result: undefined
+                        };
+                        cell.numFmt = '"$"#,##0.00';
+                    } else if (cellValue.startsWith('=')) {
+                        cell.value = <any>{
+                            formula: this.performSubstitutions(cellValue.substring(1), rowIndex, viewData.length),
+                            result: undefined
+                        };
+                    } else if (cellValue.startsWith('$') || cellValue.startsWith('-$')) {
+                        cell.value = parseFloat(cellValue.replace('$', '').replace(',', ''));
+                        cell.numFmt = '"$"#,##0.00';
+                    }
+                });
             }
             row.commit();
         });
