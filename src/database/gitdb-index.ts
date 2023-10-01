@@ -215,8 +215,8 @@ export class GitDBIndex {
   public async getAggregateForTableByFile(table: string, paths: string[]): Promise<IAggregateResponse> {
     const aggregates = await this.mongo
       .model<IFileNode>('FileNode')
-      .find({ table, path: { $in: paths }, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
-      .sort('file');
+      .find({ table, path: { $in: paths }, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } });
+    GitDB.collectionSort(aggregates, 'file');
     const aggregatesByFile: { [file: string]: { [path: string]: any } } = {};
     for (const aggregate of aggregates) {
       if (!aggregatesByFile[aggregate.file]) {
@@ -230,8 +230,8 @@ export class GitDBIndex {
   public async getPathAggregateForTable(table: string, path: string): Promise<IFileNode[]> {
     const aggregates = await this.mongo
       .model<IFileNode>('FileNode')
-      .find({ table, path, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } })
-      .sort('file');
+      .find({ table, path, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } });
+    GitDB.collectionSort(aggregates, 'file');
     return aggregates;
   }
 
@@ -346,14 +346,15 @@ export class GitDBIndex {
     table: string,
     includeNonData = false
   ): Promise<IFileIndex[]> {
-    return await this.mongo
+    const results = await this.mongo
       .model<IFileIndex>('FileIndex')
       .find({
         indexingVersion: GitDBIndex.indexingVersion,
         table,
         ...(includeNonData ? {} : { data: true }),
-      })
-      .sort({ file: 1 });
+      });
+    GitDB.collectionSort(results, 'file');
+    return results;
   }
 
   /**
@@ -373,8 +374,8 @@ export class GitDBIndex {
     // query mongo for all distinct file names, making sure indexingVersion matches
     const files = await this.mongo
       .model<IFileIndex>('FileIndex')
-      .distinct('file', query)
-      .sort();
+      .distinct('file', query);
+    files.sort((a, b) => GitDB.alphaSort(a, b));
     return files;
   }
 
@@ -480,9 +481,9 @@ export class GitDBIndex {
       const fileIndex: IFileIndex = await this.mongo
         .model<IFileIndex>('FileIndex')
         .findOneAndUpdate(query, update, options);
-        if (fileIndex.data) {
-          await this.updateFileNodes(fileIndex);
-        }
+      if (fileIndex.data) {
+        await this.updateFileNodes(fileIndex);
+      }
     }
   }
 
@@ -598,9 +599,12 @@ export class GitDBIndex {
     viewResponse: IViewResponse
   ): string[][] {
     const headerRow: string[] = Object.values(viewRoot);
+    // modify the header row so that the first column is the file name
+    headerRow.unshift('File');
     const rows: string[][] = [headerRow];
     Object.keys(viewResponse).forEach((file) => {
-      const row = [];
+      // start each row with the filename
+      const row = [file];
       // ensure every column has a value, as not every column may be in the viewResponse
       headerRow.forEach((column) => {
         row.push(viewResponse[file][column] ?? '');
@@ -614,10 +618,10 @@ export class GitDBIndex {
     const aggregate: IFileNode[] = await this.getPathAggregateForTable(table, path);
     const response: IAggregateQueryResponse[] = [];
     for (const fileNode of aggregate) {
-      response.push({ 
+      response.push({
         file: fileNode.file,
         value: fileNode.value,
-       });
+      });
     }
     return response;
   }
