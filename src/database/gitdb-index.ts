@@ -599,8 +599,6 @@ export class GitDBIndex {
     viewResponse: IViewResponse
   ): string[][] {
     const headerRow: string[] = Object.values(viewRoot);
-    // modify the header row so that the first column is the file name
-    headerRow.unshift('File');
     const rows: string[][] = [headerRow];
     Object.keys(viewResponse).forEach((file) => {
       // start each row with the filename
@@ -611,6 +609,8 @@ export class GitDBIndex {
       });
       rows.push(row);
     });
+    // modify the header row so that the first column is the file name
+    rows[0].unshift('File');
     return rows;
   }
 
