@@ -587,8 +587,10 @@ export class GitDBIndex {
     Object.keys(viewData).forEach((file) => {
       viewResponse[file] = {};
       Object.keys(viewData[file]).forEach((path) => {
-        const column_name = viewRoot[path];
-        viewResponse[file][column_name] = viewData[file][path] ?? '';
+        if (viewRoot.columns[path]) {
+          const column_name = viewRoot.columns[path];
+          viewResponse[file][column_name] = viewData[file][path] ?? '';
+        }
       });
     });
     return viewResponse;
@@ -598,19 +600,22 @@ export class GitDBIndex {
     viewRoot: IViewRoot,
     viewResponse: IViewResponse
   ): string[][] {
-    const headerRow: string[] = Object.values(viewRoot);
+    const includeFileName = viewRoot.options?.includeFileName ?? false;
+    const headerRow: string[] = Object.values(viewRoot.columns);
     const rows: string[][] = [headerRow];
     Object.keys(viewResponse).forEach((file) => {
       // start each row with the filename
-      const row = [file];
+      const row = includeFileName ? [file] : [];
       // ensure every column has a value, as not every column may be in the viewResponse
       headerRow.forEach((column) => {
         row.push(viewResponse[file][column] ?? '');
       });
       rows.push(row);
     });
-    // modify the header row so that the first column is the file name
-    rows[0].unshift('File');
+    if (includeFileName) {
+      // modify the header row so that the first column is the file name
+      rows[0].unshift('File');
+    }
     return rows;
   }
 
@@ -635,24 +640,24 @@ export class GitDBIndex {
   }
 
   public async getRenderedView(table: string): Promise<IViewResponse> {
-    const viewData = await this.gitDb.getViewJson(table);
-    const paths = this.gitDb.getViewPathsFromViewRoot(viewData);
-    const aggregate = await this.getAggregateForTableByFile(table, paths);
-    const response = this.buildViewFromViewRootAndAggregates(
-      viewData,
+    const viewJson: IViewRoot = await this.gitDb.getViewJson(table);
+    const paths: string[] = this.gitDb.getViewPathsFromViewRoot(viewJson);
+    const aggregate: IAggregateResponse = await this.getAggregateForTableByFile(table, paths);
+    const response: IViewResponse = this.buildViewFromViewRootAndAggregates(
+      viewJson,
       aggregate
     );
     return response;
   }
 
   public async getCondensedView(table: string): Promise<string[][]> {
-    const viewData = await this.gitDb.getViewJson(table);
-    const paths = this.gitDb.getViewPathsFromViewRoot(viewData);
-    const aggregate = await this.getAggregateForTableByFile(table, paths);
-    const response = this.buildViewFromViewRootAndAggregates(
-      viewData,
+    const viewJson: IViewRoot = await this.gitDb.getViewJson(table);
+    const paths: string[] = this.gitDb.getViewPathsFromViewRoot(viewJson);
+    const aggregate: IAggregateResponse = await this.getAggregateForTableByFile(table, paths);
+    const response: IViewResponse = this.buildViewFromViewRootAndAggregates(
+      viewJson,
       aggregate
     );
-    return this.condenseViewResponse(viewData, response);
+    return this.condenseViewResponse(viewJson, response);
   }
 }

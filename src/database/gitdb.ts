@@ -140,17 +140,29 @@ export class GitDB {
   }
 
   public getViewJson(table: string): IViewRoot {
+    const defaultResult: IViewRoot = {
+      version: 2,
+      options: {
+        includeFileName: true,
+      },
+      columns: {}
+    };
     if (!this.hasViewJson(table)) {
-      return {};
+      return defaultResult;
     }
     const viewJsonPath = join(this.gitDatabase.fullPath, table, 'view.json');
     const viewJsonString = readFileSync(viewJsonPath, 'utf-8');
-    const viewJson = JSON.parse(viewJsonString) as IViewRoot;
-    return viewJson;
+    try {
+      const viewJson = JSON.parse(viewJsonString) as IViewRoot;
+      return viewJson;
+    }
+    catch (error) {
+      return defaultResult;
+    }
   }
 
   public getViewPathsFromViewRoot(viewRoot: IViewRoot): string[] {
-    return Object.keys(viewRoot);
+    return Object.keys(viewRoot.columns);
   }
 
   public hasViewJson(table: string): boolean {

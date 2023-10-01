@@ -1,3 +1,9 @@
 export interface IViewRoot {
-    [columnName: string]: string;
+    version: number;
+    options: {
+        includeFileName?: boolean;
+    };
+    columns: {
+        [columnName: string]: string;
+    };
 }
