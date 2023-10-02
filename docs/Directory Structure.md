@@ -1,6 +1,6 @@
 # Directory Structure
 
-Directory structure is critical to the functionality of Node-GitDB. 
+Directory structure is critical to the functionality of OpenBook.
 Each table is housed within its own directory, and each record is a markdown file within that directory.
 Tables/directories can not be nested.
 

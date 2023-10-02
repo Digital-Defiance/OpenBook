@@ -9,7 +9,7 @@ import { environment } from '../environment';
 import { IViewRoot } from '../interfaces/viewRoot';
 
 /**
- * GitDB is the Git-based on-disk component of node-gitdb. It is responsible for
+ * GitDB is the Git-based on-disk component of OpenBook. It is responsible for
  * checking out the git repository containing the markdown formatted database
  * and providing methods to index (into mongo) and query the database.
  *

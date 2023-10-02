@@ -1,7 +1,7 @@
 {
   "name": "e2e",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": ["node-gitdb"],
+  "implicitDependencies": ["openbook"],
   "targets": {
     "e2e": {
       "executor": "@nx/jest:jest",

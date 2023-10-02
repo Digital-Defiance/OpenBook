@@ -9,7 +9,7 @@ export const environment: IEnvironment = {
     host: process.env.HOST ?? 'localhost',
     port: Number(process.env.PORT ?? 3000),
     gitdb: {
-        mountPoint: process.env.GITDB_MOUNTPOINT ?? '/tmp/node-gitdb',
+        mountPoint: process.env.GITDB_MOUNTPOINT ?? '/tmp/openbook',
         repo: process.env.GITDB_REPO ?? '',
         repoRecursive: process.env.GITDB_REPO_RECURSIVE === 'true',
         branch: process.env.GITDB_REPO_BRANCH ?? 'main',

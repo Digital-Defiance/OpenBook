@@ -1,13 +1,13 @@
 /* eslint-disable */
 export default {
-  displayName: 'node-gitdb',
+  displayName: 'openbook',
   preset: './jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: './coverage/node-gitdb',
+  coverageDirectory: './coverage/openbook',
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
     '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',

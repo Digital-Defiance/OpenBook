@@ -1,5 +1,5 @@
 {
-  "name": "node-gitdb",
+  "name": "openbook",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "src",
   "projectType": "application",
@@ -10,7 +10,7 @@
       "defaultConfiguration": "production",
       "options": {
         "platform": "node",
-        "outputPath": "dist/node-gitdb",
+        "outputPath": "dist/openbook",
         "format": ["cjs"],
         "bundle": false,
         "main": "src/main.ts",
@@ -40,14 +40,14 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "node-gitdb:build"
+        "buildTarget": "openbook:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "node-gitdb:build:development"
+          "buildTarget": "openbook:build:development"
         },
         "production": {
-          "buildTarget": "node-gitdb:build:production"
+          "buildTarget": "openbook:build:production"
         }
       }
     },

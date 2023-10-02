@@ -1,10 +1,10 @@
 {
-  "name": "@node-gitdb/source",
+  "name": "@openbook/source",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
     "start": "nx serve",
-    "start:direct": "node dist/node-gitdb/main.js",
+    "start:direct": "node dist/openbook/main.js",
     "build": "nx build",
     "test": "nx test",
     "secret:new": "node -e \"console.log (require('crypto').randomBytes(32).toString ('hex'));\""

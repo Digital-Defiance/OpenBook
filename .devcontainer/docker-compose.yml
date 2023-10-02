@@ -10,7 +10,7 @@ services:
     depends_on:
       - mongo
     networks:
-      - node-gitdb
+      - openbook
 
   mongo:
     restart: always
@@ -21,7 +21,7 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      - node-gitdb
+      - openbook
     ports:
       - 27017:27017
 
@@ -29,4 +29,4 @@ volumes:
   mongo_data:
 
 networks:
-  node-gitdb:
+  openbook:

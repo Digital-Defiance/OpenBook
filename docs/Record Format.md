@@ -2,7 +2,7 @@
 
 Largely GitHub Flavored Markdown (GFM)
 
-Node-GitDB will parse the markdown and respond to queries in a way that is similar to a database. Most of the functionality will be in querying and parsing the data.
+OpenBook will parse the markdown and respond to queries in a way that is similar to a database. Most of the functionality will be in querying and parsing the data.
 
 ```
 # Record

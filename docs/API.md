@@ -1,13 +1,13 @@
 # API
 
-Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://github.com/Digital-Defiance/node-gitdb/blob/main/Node-GitDB.postman_collection.json)
+Postman 2.1 schema: [OpenBook/OpenBook.postman_collection.json](https://github.com/Digital-Defiance/OpenBook/blob/main/OpenBook.postman_collection.json)
 
 ## Tables
 
 ### GET /tables
 
-​	the /tables endpoint returns the table names directly off the disk, not using the mongo index
-​	these are relative to the mountpoint/path options of the GitDB, they may or may not contain records
+​ the /tables endpoint returns the table names directly off the disk, not using the mongo index
+​ these are relative to the mountpoint/path options of the GitDB, they may or may not contain records
 
 ```json
 [
@@ -21,7 +21,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /tables/:table
 
-​	i.e. GET /tables/Members
+​ i.e. GET /tables/Members
 
 ```json
 [
@@ -38,11 +38,11 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-​	the /tables/:table endpoint returns the file names directly off the disk, not using the mongo index
+​ the /tables/:table endpoint returns the file names directly off the disk, not using the mongo index
 
 ### GET /tables/:table/data
 
-​	gets an array of the root nodes for all of the files in the table
+​ gets an array of the root nodes for all of the files in the table
 
 ```json
 [
@@ -69,7 +69,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /tables/:table_name/files/:file_name
 
-​	returns the available formats for the given table/file
+​ returns the available formats for the given table/file
 
 ```json
 [
@@ -81,7 +81,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /tables/:table_name/files/:file_name/json
 
-​	returns the JSON format of the requested file
+​ returns the JSON format of the requested file
 
 ```json
 {
@@ -106,27 +106,27 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /tables/:table_name/files/:file_name/html
 
-​	returns the HTML format of the requested file
+​ returns the HTML format of the requested file
 
 ```html
 <h1>Donation</h1>
 <p><strong>Name:</strong> Donation to cover Charitable Organization Registration
-	<strong>Involved Party:</strong> Jessica Mulein
-	<strong>Date:</strong> 2023-02-20
-	<strong>Description:</strong> Donation to cover Charitable Organization Registration
-	<strong>Quantity:</strong> 1
-	<strong>Item Amount:</strong> $60.00
-	<strong>Total:</strong> $60.00
-	<strong>Balance:</strong> $60.00
-	<strong>Category:</strong> Non Profit Income:Cash Donations
-	<strong>Memo:</strong> State of Washington Corporations &#x26; Charities Division. Charitable Organization
-	Registration.
-	<strong>Reference Number:</strong> 2023022000136199</p>
+ <strong>Involved Party:</strong> Jessica Mulein
+ <strong>Date:</strong> 2023-02-20
+ <strong>Description:</strong> Donation to cover Charitable Organization Registration
+ <strong>Quantity:</strong> 1
+ <strong>Item Amount:</strong> $60.00
+ <strong>Total:</strong> $60.00
+ <strong>Balance:</strong> $60.00
+ <strong>Category:</strong> Non Profit Income:Cash Donations
+ <strong>Memo:</strong> State of Washington Corporations &#x26; Charities Division. Charitable Organization
+ Registration.
+ <strong>Reference Number:</strong> 2023022000136199</p>
 ```
 
 ### GET /tables/:table_name/files/:file_name/markdown
 
-​	returns the Markdown format of the requested file
+​ returns the Markdown format of the requested file
 
 ```markdown
 # Donation
@@ -147,7 +147,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /tables/:table_name/paths
 
-​	Gets all of the distinct path names available for the table from the flattened filenodes collection
+​ Gets all of the distinct path names available for the table from the flattened filenodes collection
 
 ```json
 [
@@ -179,7 +179,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /tables/:table_name/paths/:path
 
-​	Gets the associated columns for the given table path for all records in the table
+​ Gets the associated columns for the given table path for all records in the table
 
 ```json
 [
@@ -192,14 +192,12 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 ]
 ```
 
-
-
 ## Views
 
 ### GET /view/:table_name
 
-​	Gets the associated view data for the given table, if a view.json exists for the table.
-​	Response format is an object keyed by filename and then the path => column name from the view.json is keyed as column_name => value. Checkboxes return true or false. Data is whitespace trimmed.
+​ Gets the associated view data for the given table, if a view.json exists for the table.
+​ Response format is an object keyed by filename and then the path => column name from the view.json is keyed as column_name => value. Checkboxes return true or false. Data is whitespace trimmed.
 
 ```json
 {
@@ -235,7 +233,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /view/:table_name/paths
 
-​	Returns an array of the string paths used in the table's view.json
+​ Returns an array of the string paths used in the table's view.json
 
 ```json
 [
@@ -267,7 +265,7 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /view/:table_name/condensed
 
-​	Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
+​ Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
 
 ```
 [
@@ -328,6 +326,6 @@ Postman 2.1 schema: [node-gitdb/Node-GitDB.postman_collection.json](https://gith
 
 ### GET /view/:table_name/excel
 
-​	Gets the [condensed](API.md#get-viewtable_namecondensed) view as an excel spreadsheet in xlsx format.
+​ Gets the [condensed](API.md#get-viewtable_namecondensed) view as an excel spreadsheet in xlsx format.
 
-<img width="1248" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/601e0745-4963-40fb-8a1f-59088d7d6bb5">
+<img width="1248" alt="image" src="https://github.com/Digital-Defiance/OpenBook/assets/3766240/601e0745-4963-40fb-8a1f-59088d7d6bb5">

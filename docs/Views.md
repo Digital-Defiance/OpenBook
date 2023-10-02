@@ -35,16 +35,16 @@ There are several view [endpoints](API.md#Views).
 
 ### GET /view/:table_name
 
-​	Gets the associated view data for the given table, if a view.json exists for the table.
-​	Response format is an object keyed by filename and then the path => column name from the view.json is keyed as column_name => value. Checkboxes return true or false. Data is whitespace trimmed.
+​ Gets the associated view data for the given table, if a view.json exists for the table.
+​ Response format is an object keyed by filename and then the path => column name from the view.json is keyed as column_name => value. Checkboxes return true or false. Data is whitespace trimmed.
 
 ### GET /view/:table_name/paths
 
-​	Returns an array of the string paths used in the table's view.json
+​ Returns an array of the string paths used in the table's view.json
 
 ### GET /view/:table_name/condensed
 
-​	Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
+​ Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
 
 ## Example 1: Digital Defiance Members
 
@@ -79,6 +79,7 @@ For this view JSON used by the Digital Defiance Members table.
 ```
 
 For example the above, when used on a template like this:
+
 ```markdown
 # {User}
 
@@ -155,6 +156,7 @@ We get the following JSON from the [View API endpoint](API.md#get-viewtable_name
 ## Example 2: Digital Defiance 2023 Cash Flow
 
 view.json:
+
 ```json
 {
     "root.0.heading.0.text": "Type",
@@ -173,6 +175,7 @@ view.json:
 ```
 
 example view endpoint result:
+
 ```json
 {
     "20230220_credit_01.md": {
@@ -205,5 +208,6 @@ example view endpoint result:
     }
 }
 ```
+
 example excel:
-<img width="1248" alt="image" src="https://github.com/Digital-Defiance/node-gitdb/assets/3766240/b025f921-eeec-41b7-9521-fd8066ade025">
+<img width="1248" alt="image" src="https://github.com/Digital-Defiance/OpenBook/assets/3766240/b025f921-eeec-41b7-9521-fd8066ade025">
