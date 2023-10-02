@@ -1,4 +1,5 @@
 import { Cell, Workbook, Worksheet } from 'exceljs';
+import { IBaseVariables } from '../interfaces/baseVariables';
 import { GitDB } from './gitdb';
 
 export class GitDBExcel {
@@ -7,30 +8,54 @@ export class GitDBExcel {
         this.gitDb = gitDb;
     }
 
-    private getVariables(currentRowIndex: number, currentColumnIndex: number, row_count: number) {
-        return {
-            '{{CURRENT_ROW}}': currentRowIndex,
-            '{{CURRENT_ROW-1}}': currentRowIndex - 1,
-            '{{CURRENT_ROW+1}}': currentRowIndex + 1,
-            '{{CURRENT_ROW-2}}': currentRowIndex - 2,
-            '{{CURRENT_ROW+2}}': currentRowIndex + 2,
-            '{{ROW_COUNT}}': row_count,
-            '{{ROW_COUNT-1}}': row_count - 1,
-            '{{ROW_COUNT+1}}': row_count + 1,
-            '{{ROW_COUNT-2}}': row_count - 2,
-            '{{ROW_COUNT+2}}': row_count + 2,
-            '{{CURRENT_COLUMN}}': currentColumnIndex,
-            '{{CURRENT_COLUMN-1}}': currentColumnIndex - 1,
-            '{{CURRENT_COLUMN+1}}': currentColumnIndex + 1,
-            '{{CURRENT_COLUMN-2}}': currentColumnIndex - 2,
-            '{{CURRENT_COLUMN+2}}': currentColumnIndex + 2,
+    private columnNumberToLetter(colNumber: number): string {
+        if (colNumber < 1) {
+            return 'A';
         }
+        // A = 1, Z = 26, AA = 27, AB = 28, etc.
+        const base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        while (colNumber > 0) {
+            const remainder = colNumber % 26;
+            result = base[remainder - 1] + result;
+            colNumber = Math.floor(colNumber / 26);
+        }
+        return result;
     }
 
-    private performSubstitutions(formula: string, currentRowIndex: number, currentColumnIndex: number, row_count: number) {
-        const variables = this.getVariables(currentRowIndex, currentColumnIndex, row_count);
-        Object.keys(variables).forEach(variable => {
-            formula = formula.replace(variable, variables[variable].toString());
+    /**
+     * Given a set of base variables, return a map of variables that can be used in a formula, including offsets.
+     * This produces CURRENT_ROW+1, CURRENT_ROW-1, etc.
+     * @param baseVars The base variables to use
+     * @returns A map of variables including offsets that can be used in a formula
+     */
+    private getVariables(baseVars: IBaseVariables): Map<string, string> {
+        const offsets = [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const variables = new Map<string, string>();
+
+        for (const key in baseVars) {
+            variables.set(`{{${key}}}`, baseVars[key].toString());
+            offsets.forEach(offset => {
+                variables.set(`{{${key}${offset >= 0 ? '+' : ''}${offset}}}`, (baseVars[key] + offset).toString());
+            });
+        }
+        // do CURRENT_COLUMN_LETTER and offsets
+        variables.set(`{{CURRENT_COLUMN_LETTER}}`, this.columnNumberToLetter(baseVars['CURRENT_COLUMN']));
+        offsets.forEach(offset => {
+            const colNumber = baseVars['CURRENT_COLUMN'] + offset;
+            variables.set(`{{CURRENT_COLUMN_LETTER${offset >= 0 ? '+' : ''}${offset}}}`, this.columnNumberToLetter(colNumber));
+        });
+
+        return variables;
+    }
+
+    private performSubstitutions(formula: string, baseVars: IBaseVariables) {
+        const variables = this.getVariables(baseVars);
+        variables.forEach((value, key) => {
+            // Escape special characters for regex
+            const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escapedKey, 'g');
+            formula = formula.replace(regex, value.toString());
         });
         return formula;
     }
@@ -42,15 +67,21 @@ export class GitDBExcel {
         const viewData = await this.gitDb.index.getCondensedView(table);
         const worksheet = workbook.addWorksheet(table);
         let header = true;
-        viewData.forEach((dataRow, rowIndex) => {
+        viewData.forEach((dataRow: string[], rowIndex: number) => {
             const row = worksheet.addRow(dataRow);
             if (header) {
-                row.eachCell((cell, colNumber) => {
+                row.eachCell((cell: Cell, colNumber: number) => {
                     cell.font = { bold: true };
                 });
                 header = false;
             } else {
                 row.eachCell((cell: Cell, colNumber: number) => {
+                    const substitutionVariables: IBaseVariables = {
+                        CURRENT_COLUMN: colNumber,
+                        CURRENT_ROW: rowIndex + 1,
+                        ROW_COUNT: viewData.length,
+                    };
+
                     // if the cell starts with =, it is a formula, we need to perform substitutions
                     // if the cell starts with =$, it is a formula, but we need to format it as currency 
                     // if the cell starts with $ or -$, we need to interpret it as a number but format it as a currency
@@ -58,13 +89,13 @@ export class GitDBExcel {
                     const cellValue = cell.value.toString();
                     if (cellValue.startsWith('=$')) {
                         cell.value = <any>{
-                            formula: this.performSubstitutions(cellValue.substring(2), rowIndex, colNumber, viewData.length),
+                            formula: this.performSubstitutions(cellValue.substring(2), substitutionVariables),
                             result: undefined
                         };
                         cell.numFmt = '"$"#,##0.00';
                     } else if (cellValue.startsWith('=')) {
                         cell.value = <any>{
-                            formula: this.performSubstitutions(cellValue.substring(1), rowIndex, colNumber, viewData.length),
+                            formula: this.performSubstitutions(cellValue.substring(1), substitutionVariables),
                             result: undefined
                         };
                     } else if (cellValue.startsWith('$') || cellValue.startsWith('-$')) {
