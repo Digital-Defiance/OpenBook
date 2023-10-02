@@ -33,18 +33,18 @@ In the above example, we have an object where the left hand side properties are 
 
 There are several view [endpoints](API.md#Views).
 
-### GET /view/:table_name
+### GET /views/:table_name
 
-​ Gets the associated view data for the given table, if a view.json exists for the table.
+ Gets the associated view data for the given table, if a view.json exists for the table.
 ​ Response format is an object keyed by filename and then the path => column name from the view.json is keyed as column_name => value. Checkboxes return true or false. Data is whitespace trimmed.
 
-### GET /view/:table_name/paths
+### GET /views/:table_name/paths
 
-​ Returns an array of the string paths used in the table's view.json
+ Returns an array of the string paths used in the table's view.json
 
-### GET /view/:table_name/condensed
+### GET /views/:table_name/condensed
 
-​ Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
+ Gets the associated view data as an array of string columns, starting with a header row. Designed to be easily imported into Excel.
 
 ## Example 1: Digital Defiance Members
 

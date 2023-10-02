@@ -4,7 +4,7 @@
 		"name": "OpenBook",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12150153",
-		"_collection_link": "https://solar-shuttle-782726.postman.co/workspace/Node-GitDB~f7af7469-07aa-4a5d-8389-809e686dee66/collection/12150153-764c26c8-fc3e-43c9-b967-4e27ffaa4cb4?action=share&source=collection_link&creator=12150153"
+		"_collection_link": "https://solar-shuttle-782726.postman.co/workspace/OpenBook~f7af7469-07aa-4a5d-8389-809e686dee66/collection/12150153-764c26c8-fc3e-43c9-b967-4e27ffaa4cb4?action=share&source=collection_link&creator=12150153"
 	},
 	"item": [
 		{
@@ -287,14 +287,14 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}",
+					"raw": "http://{{HOST}}:{{PORT}}/views/{{table_name}}",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"view",
+						"views",
 						"{{table_name}}"
 					]
 				}
@@ -318,14 +318,14 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}/paths",
+					"raw": "http://{{HOST}}:{{PORT}}/views/{{table_name}}/paths",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"view",
+						"views",
 						"{{table_name}}",
 						"paths"
 					]
@@ -350,14 +350,14 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{HOST}}:{{PORT}}/view/{{table_name}}/condensed",
+					"raw": "http://{{HOST}}:{{PORT}}/views/{{table_name}}/condensed",
 					"protocol": "http",
 					"host": [
 						"{{HOST}}"
 					],
 					"port": "{{PORT}}",
 					"path": [
-						"view",
+						"views",
 						"{{table_name}}",
 						"condensed"
 					]

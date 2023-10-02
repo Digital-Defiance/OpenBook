@@ -19,7 +19,7 @@ app.use(express.json());
       await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
       app.use('/tables', getTablesRouter(gitDb));
-      app.use('/view', getViewRouter(gitDb));
+      app.use('/views', getViewRouter(gitDb));
       app.listen(environment.port, environment.host, () => {
         console.log(`[ ready ] http://${environment.host}:${environment.port}`);
       });
