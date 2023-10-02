@@ -10,7 +10,7 @@ OpenBook is an experimental git versioned markdown filesystem to mongo orchestra
 
 It is intended to take data from a human readable repository in markdown format (maximum, single folder level depth) in a mostly human-readable format. It is not designed for huge databases- is intended for relatively small (hundreds or thousands of records) databases, such as member lists, or other small datasets. It is limited by the filesystem, its speed, and the additional overhead of git and parsing markdown.
 
-It is designed to be Markdown friendly, although users do need to be careful about the format of their data. Structure is essential in being able to query into the nested structure of the document.
+It is designed to be Markdown friendly, although users do need to be careful about the format of their data. Structure is essential in being able to query into the nested structure of the document. Structure is expected to be GitHub flavored markdown. Depending on the structure of the document, some lines may need to have two spaces at the end of the line to format correctly, which is according to GFM syntax.
 
 Internally we use [remark - npm (npmjs.com)](https://www.npmjs.com/package/remark), which used to be called mdast, to convert the markdown into tables of queryable data from mongo. We store the entire parsed root node, and we do a further stage of indexing to flatten the nodes for easier querying.
 
@@ -105,7 +105,7 @@ There are options to locate the date at a subdirectory within each of the reposi
 * From within the devcontainer:
   * ```$ cd OpenBook/openbook```
   * ```$ yarn```
-  * ``` npx nx serve```
+  * ``` $ yarn start```
 
 ## Tasks
 
@@ -118,7 +118,8 @@ There are options to locate the date at a subdirectory within each of the reposi
 
 ### In Progress
 
-* Support querying/updating through REST API
+* Support querying through REST API
+* Support updating through REST API
 
 ### TODO
 
