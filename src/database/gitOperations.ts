@@ -124,35 +124,32 @@ export class GitOperations {
   }
 
   public async getChangedMarkdownFiles(sinceRevision: string): Promise<string[]> {
-    console.log(`Checking for since revision: ${sinceRevision}`);
+    console.log(`Checking for changes since revision: ${sinceRevision}`);
     const git = this.getSimpleGit();
   
     try {
-      const diff = await git.diff([`${sinceRevision}..HEAD`, '--name-only', '--', '*.md']);
-  
-      if (diff.trim().length === 0) {
+      const diffOutput = await git.diff([`${sinceRevision}..HEAD`, '--name-status', '--', '*.md']);
+
+      if (!diffOutput.trim()) {
         console.log(`No changes since revision: ${sinceRevision}`);
         return [];
-      } 
+      }
   
-      const relativePath = this.relativePath;
+      const changedFiles = diffOutput.split('\n')
+        .map(line => {
+          const [status, path] = line.split(/\s+/, 2); // Split status and path
+          return { status, path };
+        })
+        .filter(({ path }) => {
+          // Ensure the path is within the GITDB_PATH sub-directory
+          return path.startsWith(this.relativePath);
+        })
+        .map(({ status, path }) => {
+          // For simplicity, return the path, but you could also handle different statuses here
+          return path;
+        });
   
-      const changedFiles = diff.split('\n').filter(file => {
-        // Exclude empty strings
-        if (file.length === 0) return false;
-  
-        // Exclude files not under the relative path
-        if (relativePath !== '/' && !file.startsWith(relativePath)) return false;
-  
-        const fileParts = file.split('/');
-  
-        // Exclude files not at the correct directory depth
-        if (relativePath === '/' ? fileParts.length <= 1 : fileParts.length !== 2) return false;
-  
-        return true;
-      });
-  
-      console.log('Changed files: ', changedFiles);
+      console.log('Relevant changed files:', changedFiles);
   
       return changedFiles;
   
