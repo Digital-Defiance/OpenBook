@@ -11,8 +11,10 @@ describe('core/formula', () => {
             [53, 'BA'],
             [702, 'ZZ'],
             [703, 'AAA'],
+            [0, 'A'],
+            [-1, 'A']
         ];
-    
+
         test.each(testCases)("given column number %d, returns %s", (colNumber: number, expected: string) => {
             expect(GitDbFormula.columnNumberToLetter(colNumber)).toBe(expected);
         });
@@ -39,11 +41,11 @@ describe('core/formula', () => {
             };
             let formula = "Row: {{CURRENT_ROW+1}}, Col: {{CURRENT_COLUMN_LETTER+1}}";
             expect(GitDbFormula.performVariableSubstitutions(formula, baseVars)).toBe("Row: 6, Col: D");
-    
+
             formula = "Row: {{CURRENT_ROW-6}}, Col: {{CURRENT_COLUMN_LETTER-3}}";
             // Adjusted expectations: Row defaults to "1" and Column defaults to "A"
             expect(GitDbFormula.performVariableSubstitutions(formula, baseVars)).toBe("Row: 1, Col: A");
-    
+
             formula = "Next Row: {{CURRENT_ROW+1}}, Previous Column: {{CURRENT_COLUMN_LETTER-1}}";
             expect(GitDbFormula.performVariableSubstitutions(formula, baseVars)).toBe("Next Row: 6, Previous Column: B");
         });
@@ -99,7 +101,7 @@ describe('core/formula', () => {
             const formula = "Col: {{CURRENT_COLUMN_LETTER-5}}";
             expect(GitDbFormula.performVariableSubstitutions(formula, baseVars)).toBe("Col: A");
         });
-    
+
         it('should return "1" for CURRENT_ROW with large negative offsets', () => {
             const baseVars = { CURRENT_COLUMN: 3, CURRENT_ROW: 5, ROW_COUNT: 10};
             const formula = "Row: {{CURRENT_ROW-10}}";
