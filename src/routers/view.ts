@@ -1,6 +1,6 @@
 import exceljs from 'exceljs';
 import { Router } from 'express';
-import { GitDB } from '../database/gitdb';
+import { GitDB } from '../core/gitdb';
 
 export function getRouter(gitDb: GitDB) {
   const viewRouter = Router();

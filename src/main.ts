@@ -2,8 +2,8 @@ import express from 'express';
 import { getRouter as getTablesRouter } from './routers/tables';
 import { getRouter as getViewRouter } from './routers/view';
 import { environment } from './environment';
-import { GitDB } from './database/gitdb';
-import { getModels } from './database/mongo';
+import { GitDB } from './core/gitdb';
+import { getModels } from './core/mongo';
 
 const app = express();
 

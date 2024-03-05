@@ -1,5 +1,5 @@
-import { GitDB } from './database/gitdb';
-import { getModels } from './database/mongo';
+import { GitDB } from './core/gitdb';
+import { getModels } from './core/mongo';
 
 
 (async function () {

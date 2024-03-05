@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { OutputFormat } from '../enumerations/outputFormat';
-import { GitDB } from '../database/gitdb';
+import { GitDB } from '../core/gitdb';
 
 export function getRouter(gitDb: GitDB) {
   const queryRouter = Router();
