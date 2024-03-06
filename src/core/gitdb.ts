@@ -34,49 +34,68 @@ export class GitDB {
     return await this.gitDatabase.getChangedMarkdownFiles(sinceRevision);
   }
 
+  /**
+   * Sorts two strings alphabetically with special handling for specific markers, date patterns, and numerical values.
+   *
+   * This method prioritizes the '_top.md' file to always come first and the '_bottom.md' file to always come last.
+   * For strings that are not special markers, it first attempts to sort based on any embedded date strings,
+   * supporting 'YYYY-MM-DD' and 'MM-DD-YYYY' formats, with valid dates being sorted chronologically.
+   *
+   * If dates are identical, not present, or not valid, the method then looks at the textual content (if any) following
+   * the date and before the last number for sorting. This ensures that strings with the same date but different
+   * subsequent text are ordered alphabetically based on that text.
+   *
+   * After comparing text, the method compares the last number found in each string, if any. Strings containing numbers
+   * are ordered numerically based on the last number. This comparison is applied to strings without identifiable dates,
+   * or to strings with dates followed by additional numeric information.
+   *
+   * If neither string contains a date or if dates and subsequent text and numbers are identical, or in cases where
+   * strings do not contain numbers, the strings are sorted alphabetically using `localeCompare`. This serves as the
+   * final tiebreaker, ensuring that strings are sorted in a standard alphabetical order barring any prior criteria.
+   *
+   * @param {string} a The first string to compare.
+   * @param {string} b The second string to compare.
+   * @returns {number} A number indicating the sort order. Negative if `a` should come before `b`, positive if `a`
+   * should come after `b`, and zero if they are considered equivalent in sort order.
+   */
   public static alphaSort(a: string, b: string): number {
+    // Special markers handling
     if (a === '_top.md') return -1;
     if (b === '_top.md') return 1;
     if (a === '_bottom.md') return 1;
     if (b === '_bottom.md') return -1;
 
-    // Extract potential date strings using regex
-    const dateRegex = /(\d{2}-\d{2}-\d{4}|\d{8}|\d{4}-\d{2}-\d{2})/;
-    const aDateMatch = a.match(dateRegex);
-    const bDateMatch = b.match(dateRegex);
+    // Date extraction and comparison
+    const extractDate = (str: string) => {
+      const dateMatch = str.match(/(\d{4}-\d{2}-\d{2})|(\d{2}-\d{2}-\d{4})/);
+      return dateMatch
+        ? moment(dateMatch[0], ['YYYY-MM-DD', 'MM-DD-YYYY'])
+        : null;
+    };
 
-    const aDate = aDateMatch
-      ? moment(aDateMatch[0], ['MM-DD-YYYY', 'MMDDYYYY', 'YYYY-MM-DD'])
-      : null;
-    const bDate = bDateMatch
-      ? moment(bDateMatch[0], ['MM-DD-YYYY', 'MMDDYYYY', 'YYYY-MM-DD'])
-      : null;
-
-    if (aDate && aDate.isValid() && bDate && bDate.isValid()) {
-      return aDate.diff(bDate);
+    const aDate = extractDate(a),
+      bDate = extractDate(b);
+    if (aDate && bDate && aDate.isValid() && bDate.isValid()) {
+      const dateDiff = aDate.diff(bDate);
+      if (dateDiff !== 0) return dateDiff < 0 ? -1 : 1;
     }
 
-    const aNumbers = a.match(/\d+/g);
-    const bNumbers = b.match(/\d+/g);
-    const aLastNumber = aNumbers
-      ? parseInt(aNumbers[aNumbers.length - 1], 10)
-      : null;
-    const bLastNumber = bNumbers
-      ? parseInt(bNumbers[bNumbers.length - 1], 10)
-      : null;
+    // Number extraction and comparison
+    const extractLastNumber = (str: string) => {
+      const numberMatch = str.match(/\d+(?!.*\d)/);
+      return numberMatch ? parseInt(numberMatch[0], 10) : null;
+    };
 
-    if (aLastNumber !== null && bLastNumber !== null) {
-      const numberComparison = aLastNumber - bLastNumber;
-      if (numberComparison !== 0) {
-        return numberComparison;
-      }
-    } else if (aLastNumber !== null) {
-      return -1;
-    } else if (bLastNumber !== null) {
-      return 1;
-    }
+    const aNumber = extractLastNumber(
+        a.replace(/(\d{4}-\d{2}-\d{2})|(\d{2}-\d{2}-\d{4})/, '')
+      ),
+      bNumber = extractLastNumber(
+        b.replace(/(\d{4}-\d{2}-\d{2})|(\d{2}-\d{2}-\d{4})/, '')
+      );
+    if (aNumber !== null && bNumber !== null && aNumber !== bNumber)
+      return aNumber - bNumber;
 
-    // If numbers are the same or there are no numbers, sort alphabetically
+    // Alphabetical comparison as a fallback
     return a.localeCompare(b);
   }
 
@@ -103,7 +122,7 @@ export class GitDB {
     // place _top at the top and _bottom at the bottom
     // try to sort a file before b file, etc.
     // file 1 should be before file 100
-    files.sort((a, b) => GitDB.alphaSort(a, b));
+    files.sort((a: string, b: string) => GitDB.alphaSort(a, b));
     files.forEach((file) => {
       if (file.startsWith('.')) {
         return;
@@ -129,7 +148,7 @@ export class GitDB {
    */
   public getTables(): string[] {
     const tables = readdirSync(this.gitDatabase.fullPath);
-    tables.sort((a, b) => GitDB.alphaSort(a, b));
+    tables.sort((a: string, b: string) => a.localeCompare(b));
     return tables.filter((table) => {
       const fullPath = join(this.gitDatabase.fullPath, table);
       return statSync(fullPath).isDirectory() && !table.startsWith('.');
@@ -142,7 +161,7 @@ export class GitDB {
       options: {
         includeFileName: true,
       },
-      columns: {}
+      columns: {},
     };
     if (!this.hasViewJson(table)) {
       return defaultResult;
@@ -152,8 +171,7 @@ export class GitDB {
     try {
       const viewJson = JSON.parse(viewJsonString) as IViewRoot;
       return viewJson;
-    }
-    catch (error) {
+    } catch (error) {
       return defaultResult;
     }
   }

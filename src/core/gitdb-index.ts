@@ -375,7 +375,7 @@ export class GitDBIndex {
     const files = await this.mongo
       .model<IFileIndex>('FileIndex')
       .distinct('file', query);
-    files.sort((a, b) => GitDB.alphaSort(a, b));
+    files.sort((a: string, b: string) => GitDB.alphaSort(a, b));
     return files;
   }
 
