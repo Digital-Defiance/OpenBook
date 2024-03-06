@@ -1,6 +1,8 @@
 import exceljs from 'exceljs';
 import { Router } from 'express';
 import { GitDB } from '../core/gitdb';
+import { GitDBExcel } from '../core/excel';
+import { GitDBHtml } from '../core/html';
 
 export function getRouter(gitDb: GitDB) {
   const viewRouter = Router();
@@ -34,8 +36,15 @@ export function getRouter(gitDb: GitDB) {
       useStyles: true,
       useSharedStrings: true,
     });
-    await gitDb.excel.getViewAsExcel(table, workbook);
+    await GitDBExcel.getViewAsExcel(gitDb, table, workbook);
     await workbook.commit();
+  });
+
+  viewRouter.get('/:table/html', async (req, res) => {
+    const table = req.params.table;
+    res.setHeader('Content-Type', 'text/html');
+    const html = await GitDBHtml.getTableAsHtml(gitDb, table);
+    res.send(`<html><head><title>${table}</title><body>${html}</body></html>`);
   });
 
   viewRouter.get('/:table/condensed', async (req, res) => {

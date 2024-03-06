@@ -3,7 +3,6 @@ import moment from 'moment';
 import { connect } from 'mongoose';
 import { join } from 'path';
 import { GitOperations } from './gitOperations';
-import { GitDBExcel } from './excel';
 import { GitDBIndex } from './gitdb-index';
 import { environment } from '../environment';
 import { IViewRoot } from '../interfaces/viewRoot';
@@ -18,7 +17,6 @@ import { IViewRoot } from '../interfaces/viewRoot';
 export class GitDB {
   public readonly gitDatabase: GitOperations;
   public readonly index: GitDBIndex;
-  public readonly excel: GitDBExcel;
   private mongo?: typeof import('mongoose');
   public get mongoConnector(): typeof import('mongoose') {
     if (!this.mongo) {
@@ -30,7 +28,6 @@ export class GitDB {
   constructor(gitDatabase: GitOperations) {
     this.gitDatabase = gitDatabase;
     this.index = new GitDBIndex(this);
-    this.excel = new GitDBExcel(this);
   }
 
   public async getChangedFiles(sinceRevision: string): Promise<string[]> {

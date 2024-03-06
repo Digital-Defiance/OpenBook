@@ -1,7 +1,7 @@
 import { ConfigParams, HyperFormula } from "hyperformula";
 import { IBaseVariables } from '../interfaces/baseVariables';
 
-export class GitDbFormula {
+export abstract class GitDBFormula {
     private constructor() {
         // Private constructor to prevent instantiation
     }
@@ -38,7 +38,7 @@ export class GitDbFormula {
         for (const key in baseVars) {
             variables.set(`{{${key}}}`, baseVars[key].toString());
         }
-        variables.set(`{{CURRENT_COLUMN_LETTER}}`, GitDbFormula.columnNumberToLetter(baseVars['CURRENT_COLUMN']));
+        variables.set(`{{CURRENT_COLUMN_LETTER}}`, GitDBFormula.columnNumberToLetter(baseVars['CURRENT_COLUMN']));
 
         return variables;
     }
@@ -69,10 +69,10 @@ export class GitDbFormula {
             const baseColumn = baseVars['CURRENT_COLUMN'];
             let newColumnNumber = baseColumn + (offset ? parseInt(offset, 10) : 0);
             newColumnNumber = Math.max(1, newColumnNumber); // Correctly handle negative offsets
-            return GitDbFormula.columnNumberToLetter(newColumnNumber);
+            return GitDBFormula.columnNumberToLetter(newColumnNumber);
         });
 
-        const variables = GitDbFormula.getVariables(baseVars);
+        const variables = GitDBFormula.getVariables(baseVars);
         variables.forEach((value, key) => {
             const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(escapedKey, 'g');
@@ -99,7 +99,7 @@ export class GitDbFormula {
                         CURRENT_ROW: rowIndex + 1,
                         ROW_COUNT: inputData.length,
                     };
-                    result[rowIndex][colIndex] = GitDbFormula.performVariableSubstitutionsOnFormula(cell, baseVariables);
+                    result[rowIndex][colIndex] = GitDBFormula.performVariableSubstitutionsOnFormula(cell, baseVariables);
                 } else {
                     result[rowIndex][colIndex] = cell;
                 }

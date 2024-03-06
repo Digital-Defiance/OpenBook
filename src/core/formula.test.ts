@@ -1,5 +1,5 @@
 import { IBaseVariables } from "../interfaces/baseVariables";
-import { GitDbFormula } from "./formula";
+import { GitDBFormula } from "./formula";
 
 describe('core/formula', () => {
     describe('columnNumberToLetter', () => {
@@ -16,7 +16,7 @@ describe('core/formula', () => {
         ];
 
         test.each(testCases)("given column number %d, returns %s", (colNumber: number, expected: string) => {
-            expect(GitDbFormula.columnNumberToLetter(colNumber)).toBe(expected);
+            expect(GitDBFormula.columnNumberToLetter(colNumber)).toBe(expected);
         });
     });
     describe('getVariables', () => {
@@ -26,8 +26,8 @@ describe('core/formula', () => {
                 CURRENT_ROW: 5,
                 ROW_COUNT: 10,
             };
-            const variables = GitDbFormula.getVariables(baseVars);
-            expect(variables.get('{{CURRENT_COLUMN_LETTER}}')).toBe(GitDbFormula.columnNumberToLetter(baseVars.CURRENT_COLUMN));
+            const variables = GitDBFormula.getVariables(baseVars);
+            expect(variables.get('{{CURRENT_COLUMN_LETTER}}')).toBe(GitDBFormula.columnNumberToLetter(baseVars.CURRENT_COLUMN));
             expect(variables.get('{{CURRENT_ROW}}')).toBe(baseVars.CURRENT_ROW.toString());
             expect(variables.get('{{ROW_COUNT}}')).toBe(baseVars.ROW_COUNT.toString());
         });
@@ -40,17 +40,17 @@ describe('core/formula', () => {
                 ROW_COUNT: 10,
             };
             let formula = "Row: {{CURRENT_ROW+1}}, Col: {{CURRENT_COLUMN_LETTER+1}}";
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Row: 6, Col: D");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Row: 6, Col: D");
 
             formula = "Row: {{CURRENT_ROW-6}}, Col: {{CURRENT_COLUMN_LETTER-3}}";
             // Adjusted expectations: Row defaults to "1" and Column defaults to "A"
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Row: 1, Col: A");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Row: 1, Col: A");
 
             formula = "Next Row: {{CURRENT_ROW+1}}, Previous Column: {{CURRENT_COLUMN_LETTER-1}}";
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Next Row: 6, Previous Column: B");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Next Row: 6, Previous Column: B");
 
             formula = "Previous Column: {{CURRENT_COLUMN-1}}";
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Previous Column: 2");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Previous Column: 2");
         });
 
         it('should handle negative and out of range offsets gracefully', () => {
@@ -61,7 +61,7 @@ describe('core/formula', () => {
             };
             // Here, an offset of +26 from 'A' (column 1) should result in 'AA', given Excel's behavior
             const formula = "{{CURRENT_ROW-2}}, {{CURRENT_COLUMN_LETTER-1}}, {{CURRENT_COLUMN_LETTER+26}}";
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("1, A, AA");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("1, A, AA");
         });        
 
         it('should handle large column number minus a large offset correctly', () => {
@@ -71,7 +71,7 @@ describe('core/formula', () => {
                 ROW_COUNT: 100000,
             };
             const formula = "{{CURRENT_COLUMN_LETTER-999}}, Row: {{CURRENT_ROW-9999}}";
-            const result = GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars);
+            const result = GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars);
             // Expect 'A' for the column after subtracting the large offset, and '1' for the row
             expect(result).toBe("A, Row: 1");
         });
@@ -84,7 +84,7 @@ describe('core/formula', () => {
             };
             const formula = "{{CURRENT_COLUMN_LETTER-501}}, Row: {{CURRENT_ROW-5001}}";
             // Since the behavior is to default to "A" and "1", adjust expectations accordingly
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("A, Row: 1");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("A, Row: 1");
         });
 
         it('should accurately process a large row number minus a large row number', () => {
@@ -94,7 +94,7 @@ describe('core/formula', () => {
                 ROW_COUNT: 1000000,
             };
             const formula = "Column: {{CURRENT_COLUMN_LETTER}}, Row: {{CURRENT_ROW-99999}}";
-            const result = GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars);
+            const result = GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars);
             // Expect 'Z' for the column, and '1' for the row after subtracting the large offset
             expect(result).toBe("Column: Z, Row: 1");
         });
@@ -102,13 +102,13 @@ describe('core/formula', () => {
         it('should return "A" for CURRENT_COLUMN_LETTER with large negative offsets', () => {
             const baseVars = { CURRENT_COLUMN: 3, CURRENT_ROW: 5, ROW_COUNT: 10};
             const formula = "Col: {{CURRENT_COLUMN_LETTER-5}}";
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Col: A");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Col: A");
         });
 
         it('should return "1" for CURRENT_ROW with large negative offsets', () => {
             const baseVars = { CURRENT_COLUMN: 3, CURRENT_ROW: 5, ROW_COUNT: 10};
             const formula = "Row: {{CURRENT_ROW-10}}";
-            expect(GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Row: 1");
+            expect(GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars)).toBe("Row: 1");
         });
 
         it('should return "1" for CURRENT_ROW and "A" for CURRENT_COLUMN_LETTER when offsets result in values less than 1', () => {
@@ -118,7 +118,7 @@ describe('core/formula', () => {
                 ROW_COUNT: 10,
             };
             const formula = "{{CURRENT_ROW-2}}, {{CURRENT_COLUMN_LETTER-1}}";
-            const result = GitDbFormula.performVariableSubstitutionsOnFormula(formula, baseVars);
+            const result = GitDBFormula.performVariableSubstitutionsOnFormula(formula, baseVars);
             // Now expecting '1' for row and 'A' for column as they default to the minimum valid values
             expect(result).toBe("1, A");
         });
@@ -133,7 +133,7 @@ describe('core/formula', () => {
             ];
 
             // Perform substitutions
-            const result = GitDbFormula.performDataSubstitutions(inputData);
+            const result = GitDBFormula.performDataSubstitutions(inputData);
 
             const expectedOutput = [
                 ['=1', '=2', '=C', '=E'],
@@ -147,7 +147,7 @@ describe('core/formula', () => {
     describe('extractFormattingFromFormula', () => {
         it('should extract formatting and formula when both are present', () => {
           const input = '!&&"$"#,##0.00&&=SUM(A1:B2)';
-          const result = GitDbFormula.extractFormattingFromFormula(input);
+          const result = GitDBFormula.extractFormattingFromFormula(input);
           expect(result).toEqual({
             formula: '=SUM(A1:B2)',
             formatting: '"$"#,##0.00'
@@ -156,7 +156,7 @@ describe('core/formula', () => {
 
         it('should return only formula when formatting is not present', () => {
           const input = '=SUM(A1:B2)';
-          const result = GitDbFormula.extractFormattingFromFormula(input);
+          const result = GitDBFormula.extractFormattingFromFormula(input);
           expect(result).toEqual({
             formula: '=SUM(A1:B2)'
           });
@@ -164,7 +164,7 @@ describe('core/formula', () => {
 
         it('should ignore invalid formatting syntax and return the original string as formula', () => {
           const input = '!&"$"#,##0.00&=SUM(A1:B2)'; // Incorrect syntax
-          const result = GitDbFormula.extractFormattingFromFormula(input);
+          const result = GitDBFormula.extractFormattingFromFormula(input);
           expect(result).toEqual({
             formula: input
           });
@@ -172,7 +172,7 @@ describe('core/formula', () => {
 
         it('should handle empty string input', () => {
           const input = '';
-          const result = GitDbFormula.extractFormattingFromFormula(input);
+          const result = GitDBFormula.extractFormattingFromFormula(input);
           expect(result).toEqual({
             formula: ''
           });
@@ -180,7 +180,7 @@ describe('core/formula', () => {
 
         it('should handle formula with complex formatting', () => {
           const input = '!&&{color:red}&&=IF(A1>0, "Positive", "Negative")';
-          const result = GitDbFormula.extractFormattingFromFormula(input);
+          const result = GitDBFormula.extractFormattingFromFormula(input);
           expect(result).toEqual({
             formula: '=IF(A1>0, "Positive", "Negative")',
             formatting: '{color:red}'
@@ -189,7 +189,7 @@ describe('core/formula', () => {
 
         it('should return the original formula when no double ampersands are present', () => {
           const input = '=A1';
-          const result = GitDbFormula.extractFormattingFromFormula(input);
+          const result = GitDBFormula.extractFormattingFromFormula(input);
           expect(result).toEqual({
             formula: '=A1'
           });
