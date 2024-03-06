@@ -1,4 +1,4 @@
-import { HyperFormula } from "hyperformula";
+import { ConfigParams, HyperFormula } from "hyperformula";
 import { IBaseVariables } from '../interfaces/baseVariables';
 
 export class GitDbFormula {
@@ -49,7 +49,7 @@ export class GitDbFormula {
      * @param baseVars The base variables to use
      * @returns The formula with substitutions performed
      */
-    public static performVariableSubstitutions(formula: string, baseVars: IBaseVariables): string {
+    public static performVariableSubstitutionsOnFormula(formula: string, baseVars: IBaseVariables): string {
         formula = formula.replace(/\{\{CURRENT_(ROW|COLUMN)([+-]\d+)?\}\}/g, (match, type, offset) => {
             offset = offset ? parseInt(offset, 10) : 0;
             if (type === 'ROW') {
@@ -82,6 +82,11 @@ export class GitDbFormula {
         return formula;
     }
 
+    /**
+     * Perform variable substitutions on the input data and return the result.
+     * @param inputData The input data to perform substitutions on
+     * @returns The input data with substitutions performed
+     */
     public static performDataSubstitutions(inputData: string[][]): string[][] {
         const result: string[][] = [];
         // for each cell (row+col) in the input data, create a new IBaseVariables object and perform substitutions
@@ -94,7 +99,7 @@ export class GitDbFormula {
                         CURRENT_ROW: rowIndex + 1,
                         ROW_COUNT: inputData.length,
                     };
-                    result[rowIndex][colIndex] = GitDbFormula.performVariableSubstitutions(cell, baseVariables);
+                    result[rowIndex][colIndex] = GitDbFormula.performVariableSubstitutionsOnFormula(cell, baseVariables);
                 } else {
                     result[rowIndex][colIndex] = cell;
                 }
@@ -103,7 +108,44 @@ export class GitDbFormula {
         return result;
     }
 
-    // public static calculateData(): string[][] {
+    /**
+     * Calculate all formulas in the input data and return the result.
+     * @param inputData 
+     * @returns 
+     */
+    public static calculateDataFormulas(inputData: string[][], options?: Partial<ConfigParams>): string[][] {
+        const result: string[][] = [];
+        const hf = HyperFormula.buildFromArray(inputData, options);
+        inputData.forEach((row, rowIndex) => {
+            result[rowIndex] = [];
+            row.forEach((cell, colIndex) => {
+                if (cell.startsWith('=')) {
+                    try {
+                        const calculatedValue = hf.getCellValue({ sheet: 0, row: rowIndex, col: colIndex });
+                        result[rowIndex][colIndex] = calculatedValue?.toString() ?? '';
+                    } catch (error) {
+                        result[rowIndex][colIndex] = '#ERROR';
+                    }
+                } else {
+                    result[rowIndex][colIndex] = cell;
+                }
+            });
+        });
 
-    // }
+        return result;
+    }
+
+    /**
+     * Given a formula with our custom formatting syntax, extract the formula and formatting and return them.
+     * Syntax: !&&{formatting}&&{cell data}
+     * eg !&&"$"#,##0.00&&=A1
+     * @param formula The formula to extract formatting from
+     */
+    public static extractFormattingFromFormula(formula: string): { formula: string, formatting?: string } {
+        const matches = formula.match(/^!&&(.+?)&&(.+)$/);
+        if (matches && matches.length === 3) {
+            return { formula: matches[2], formatting: matches[1] };
+        }
+        return { formula };
+    }
 }
