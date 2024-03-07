@@ -50,6 +50,7 @@ export abstract class GitDBFormula {
      * @returns The formula with substitutions performed
      */
     public static performVariableSubstitutionsOnFormula(formula: string, baseVars: IBaseVariables): string {
+        // replace dynamic variables
         formula = formula.replace(/\{\{CURRENT_(ROW|COLUMN)([+-]\d+)?\}\}/g, (match, type, offset) => {
             offset = offset ? parseInt(offset, 10) : 0;
             if (type === 'ROW') {
@@ -72,6 +73,12 @@ export abstract class GitDBFormula {
             return GitDBFormula.columnNumberToLetter(newColumnNumber);
         });
 
+        formula = formula.replace(/\{\{ROW_COUNT([+-]\d+)?\}\}/g, (match, offset) => {
+            const rowCount = baseVars['ROW_COUNT'];
+            return (rowCount + (offset ? parseInt(offset, 10) : 0)).toString();
+        });
+
+        // replace basic variables
         const variables = GitDBFormula.getVariables(baseVars);
         variables.forEach((value, key) => {
             const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -93,15 +100,20 @@ export abstract class GitDBFormula {
         inputData.forEach((row, rowIndex) => {
             result[rowIndex] = [];
             row.forEach((cell, colIndex) => {
-                if (cell.startsWith('=')) {
+                let cellData = cell;
+                if (cellData.startsWith('!&&')) {
+                    const cellFormatResult = GitDBFormula.extractFormattingFromFormula(cellData);
+                    cellData = cellFormatResult.formula;
+                }
+                if (cellData.startsWith('=')) {
                     const baseVariables: IBaseVariables = {
                         CURRENT_COLUMN: colIndex + 1,
                         CURRENT_ROW: rowIndex + 1,
                         ROW_COUNT: inputData.length,
                     };
-                    result[rowIndex][colIndex] = GitDBFormula.performVariableSubstitutionsOnFormula(cell, baseVariables);
+                    result[rowIndex][colIndex] = GitDBFormula.performVariableSubstitutionsOnFormula(cellData, baseVariables);
                 } else {
-                    result[rowIndex][colIndex] = cell;
+                    result[rowIndex][colIndex] = cellData;
                 }
             });
         });
@@ -120,10 +132,12 @@ export abstract class GitDBFormula {
             result[rowIndex] = [];
             row.forEach((cell, colIndex) => {
                 if (cell.startsWith('=')) {
+                    console.log('Calculating formula', cell, 'at', rowIndex, colIndex);
                     try {
                         const calculatedValue = hf.getCellValue({ sheet: 0, row: rowIndex, col: colIndex });
                         result[rowIndex][colIndex] = calculatedValue?.toString() ?? '';
                     } catch (error) {
+                        console.log('Error calculating formula', cell, 'at', rowIndex, colIndex, error);
                         result[rowIndex][colIndex] = '#ERROR';
                     }
                 } else {

@@ -43,7 +43,9 @@ export function getRouter(gitDb: GitDB) {
   viewRouter.get('/:table/html', async (req, res) => {
     const table = req.params.table;
     res.setHeader('Content-Type', 'text/html');
-    const html = await GitDBHtml.getTableAsHtml(gitDb, table);
+    const html = await GitDBHtml.getTableAsHtml(gitDb, table, {
+      licenseKey: 'gpl-v3'
+    });
     res.send(`<html><head><title>${table}</title><body>${html}</body></html>`);
   });
 

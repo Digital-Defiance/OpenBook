@@ -129,7 +129,6 @@ export class GitOperations {
   
     try {
       const diffOutput = await git.diff([`${sinceRevision}..HEAD`, '--name-status', '--', '*.md']);
-
       if (!diffOutput.trim()) {
         console.log(`No changes since revision: ${sinceRevision}`);
         return [];
@@ -138,16 +137,18 @@ export class GitOperations {
       const changedFiles = diffOutput.split('\n')
         .map(line => {
           const [status, path] = line.split(/\s+/, 2); // Split status and path
+          console.log(`Parsed line: status=${status}, path=${path}`); // Temporary logging
           return { status, path };
         })
         .filter(({ path }) => {
+          if (!path) {
+            console.error('Undefined path encountered in diff output');
+            return false;
+          }
           // Ensure the path is within the GITDB_PATH sub-directory
           return path.startsWith(this.relativePath);
         })
-        .map(({ status, path }) => {
-          // For simplicity, return the path, but you could also handle different statuses here
-          return path;
-        });
+        .map(({ status, path }) => path); // Assuming path is now guaranteed to be defined
   
       console.log('Relevant changed files:', changedFiles);
   
@@ -157,7 +158,7 @@ export class GitOperations {
       console.error(`Failed to get changes since revision: ${sinceRevision}`, error);
       throw error;
     }
-  }
+  }  
   
   public async getCurrentBranch(git?: SimpleGit): Promise<string> {
     console.log('Getting current branch');
