@@ -185,6 +185,10 @@ export class GitDB {
     return existsSync(viewJsonPath);
   }
 
+  public async pullLatest(): Promise<boolean> {
+    return await this.gitDatabase.pullLatest();
+  }
+
   public async init() {
     await this.gitDatabase.ensureCheckedOutLatest();
     this.mongo = await connect(environment.mongo.uri);

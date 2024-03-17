@@ -12,6 +12,7 @@ export class GitOperations {
   public readonly mountParent: string;
   public readonly relativePath: string;
   public readonly repo: string;
+  public readonly simpleGit: SimpleGit;
 
   constructor(config: IGitOperations) {
     this.branch = config.branch;
@@ -35,28 +36,24 @@ export class GitOperations {
     if (!existsSync(this.mountParent)) {
       throw new Error('Mountpoint parent does not exist');
     }
-  }
-
-  public getSimpleGit(): SimpleGit {
     console.log(
       `Creating simple-git instance for mountpoint: ${this.mountPoint}`
     );
-    const options: Partial<SimpleGitOptions> = {
+    const simpleGitOptions: Partial<SimpleGitOptions> = {
       baseDir: this.mountPoint,
       binary: 'git',
       maxConcurrentProcesses: 6,
       trimmed: false,
     };
 
-    return simpleGit(options);
+    this.simpleGit = simpleGit(simpleGitOptions);
   }
 
-  public async checkoutBranch(git?: SimpleGit): Promise<void> {
+  public async checkoutBranch(): Promise<void> {
     console.log(`Checking out branch: ${this.branch}`);
-    git ??= this.getSimpleGit();
-    git
+    this.simpleGit
       .fetch('origin')
-      .then(() => git.checkoutBranch(this.branch, `origin/${this.branch}`))
+      .then(() => this.simpleGit.checkoutBranch(this.branch, `origin/${this.branch}`))
       .catch(async (err) => {
         if (err.message.includes("couldn't find remote ref")) {
           console.error('Branch does not exist on remote.', this.branch);
@@ -68,8 +65,6 @@ export class GitOperations {
   }
 
   public async ensureCheckedOutLatest() {
-    let git: SimpleGit | undefined = undefined;
-
     console.log(`Ensuring mountpoint exists at mountpoint: ${this.mountPoint}`);
     if (existsSync(this.mountPoint)) {
       console.log('Mountpoint exists');
@@ -83,12 +78,11 @@ export class GitOperations {
         `Cloning repo from: ${this.repo} into mountpoint: ${this.mountPoint}`
       );
       try {
-        const gitInstance = simpleGit();
         const cloneArgs = [
           '--branch', this.branch,
         ];
         console.log('Clone args: ', cloneArgs);
-        const result = await gitInstance.clone(this.repo, this.mountPoint, cloneArgs);
+        const result = await this.simpleGit.clone(this.repo, this.mountPoint, cloneArgs);
         console.log(result);
 
         // check if the branch was checked out
@@ -102,22 +96,19 @@ export class GitOperations {
         throw error;
       }
     }
-    git ??= this.getSimpleGit();
     this.validateMountedRepo();
-    await this.ensureBranch(git);
-    await this.pullLatest(git);
+    await this.ensureBranch();
+    await this.pullLatest();
   }
 
-  public async ensureBranch(git?: SimpleGit) {
+  public async ensureBranch() {
     console.log('Ensuring we are on the correct branch');
 
-    git ??= this.getSimpleGit();
-
     // Try to get the current branch
-    const currentBranchName = await git.revparse(['--abbrev-ref', 'HEAD']);
+    const currentBranchName = await this.simpleGit.revparse(['--abbrev-ref', 'HEAD']);
 
     if (currentBranchName !== this.branch) {
-      await this.checkoutBranch(git);
+      await this.checkoutBranch();
     } else {
       console.log('Already on correct branch');
     }
@@ -125,15 +116,14 @@ export class GitOperations {
 
   public async getChangedMarkdownFiles(sinceRevision: string): Promise<string[]> {
     console.log(`Checking for changes since revision: ${sinceRevision}`);
-    const git = this.getSimpleGit();
-  
+
     try {
-      const diffOutput = await git.diff([`${sinceRevision}..HEAD`, '--name-status', '--', '*.md']);
+      const diffOutput = await this.simpleGit.diff([`${sinceRevision}..HEAD`, '--name-status', '--', '*.md']);
       if (!diffOutput.trim()) {
         console.log(`No changes since revision: ${sinceRevision}`);
         return [];
       }
-  
+
       const changedFiles = diffOutput.split('\n')
         .map(line => {
           const [status, path] = line.split(/\s+/, 2); // Split status and path
@@ -149,22 +139,21 @@ export class GitOperations {
           return path.startsWith(this.relativePath);
         })
         .map(({ status, path }) => path); // Assuming path is now guaranteed to be defined
-  
+
       console.log('Relevant changed files:', changedFiles);
-  
+
       return changedFiles;
-  
+
     } catch (error) {
       console.error(`Failed to get changes since revision: ${sinceRevision}`, error);
       throw error;
     }
-  }  
-  
-  public async getCurrentBranch(git?: SimpleGit): Promise<string> {
+  }
+
+  public async getCurrentBranch(): Promise<string> {
     console.log('Getting current branch');
-    git ??= this.getSimpleGit();
     try {
-      const currentBranch = await git.revparse(['--abbrev-ref', 'HEAD']);
+      const currentBranch = await this.simpleGit.revparse(['--abbrev-ref', 'HEAD']);
       return currentBranch;
     } catch (error) {
       console.error('Failed to get current branch: ', error);
@@ -176,34 +165,38 @@ export class GitOperations {
   }
 
   public async getCurrentRevision() {
-    const git = this.getSimpleGit();
-    const gitHash = await git.revparse(['HEAD']);
+    const gitHash = await this.simpleGit.revparse(['HEAD']);
     console.log(`Current git hash: ${gitHash}`);
     return gitHash;
   }
 
   public async getFileHash(table: string, file: string) {
     const filePath = join(this.fullPath, table, file);
-    const git = this.getSimpleGit();
-    const hash = await git.raw(['hash-object', filePath]);
+    const hash = await this.simpleGit.raw(['hash-object', filePath]);
     return hash.trim();
   }
 
-  public async pullLatest(git?: SimpleGit) {
+  public async pullLatest(): Promise<boolean> {
+    const gitRevision = await this.getCurrentRevision();
     console.log('Pulling latest changes');
-    git ??= this.getSimpleGit();
     try {
-      await git.pull('origin', this.branch);
+      await this.simpleGit.pull('origin', this.branch);
     } catch (error) {
       console.error('Failed to pull changes: ', error);
       throw error;
     }
+    const newGitRevision = await this.getCurrentRevision();
+    if (gitRevision !== newGitRevision) {
+      console.log('Changes pulled');
+      return true;
+    }
+    console.log('No changes to pull');
+    return false;
   }
 
   public async pushToOrigin(): Promise<void> {
     console.log('Pushing changes to origin');
-    const git = this.getSimpleGit();
-    await git.push('origin', this.branch).catch((error) => {
+    await this.simpleGit.push('origin', this.branch).catch((error) => {
       console.error('Failed to push changes: ', error);
       throw error;
     });

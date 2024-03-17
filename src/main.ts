@@ -9,12 +9,30 @@ const app = express();
 
 app.use(express.json());
 
+async function gitPullLatest(gitDb: GitDB) {
+  const changesPresent = await gitDb.pullLatest();
+  if (changesPresent) {
+    console.log('Refreshing and updating indices');
+    await gitDb.index.determineChangesAndUpdateIncices();
+  }
+}
+
 (async function () {
   await getModels();
   await (async () => {
     try {
       console.log('Loading GitDB');
       const gitDb = await GitDB.new();
+      const gitDbUpdateInterval = parseInt(process.env.GIT_UPDATE_INTERVAL, 10) ?? 60000;
+      if (gitDbUpdateInterval < 0 || isNaN(gitDbUpdateInterval)) {
+        throw new Error('Invalid git update interval');
+      }
+      console.log(`Setting up git pulls at ${gitDbUpdateInterval} interval`)
+      setInterval(() => {
+        (async () => {
+          await gitPullLatest(gitDb);
+        });
+      }, gitDbUpdateInterval);
       console.log('Refreshing and updating indices');
       await gitDb.index.determineChangesAndUpdateIncices();
       console.log('Starting server');
