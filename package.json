@@ -7,7 +7,8 @@
     "start:direct": "node dist/openbook/main.js",
     "build": "nx build",
     "test": "nx test",
-    "secret:new": "node -e \"console.log (require('crypto').randomBytes(32).toString ('hex'));\""
+    "secret:new": "node -e \"console.log (require('crypto').randomBytes(32).toString ('hex'));\"",
+    "install:npm-globals": "npm install -g @nrwl/cli"
   },
   "private": true,
   "dependencies": {
