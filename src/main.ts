@@ -23,7 +23,8 @@ async function gitPullLatest(gitDb: GitDB) {
     try {
       console.log('Loading GitDB');
       const gitDb = await GitDB.new();
-      const gitDbUpdateInterval = parseInt(process.env.GIT_UPDATE_INTERVAL, 10) ?? 60000;
+      const defaultInterval = 300000;
+      const gitDbUpdateInterval = process.env.GIT_UPDATE_INTERVAL ? parseInt(process.env.GIT_UPDATE_INTERVAL, 10) : defaultInterval ?? defaultInterval;
       if (gitDbUpdateInterval < 0 || isNaN(gitDbUpdateInterval)) {
         throw new Error('Invalid git update interval');
       }

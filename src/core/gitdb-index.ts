@@ -14,7 +14,7 @@ import {
   getRemarkToMarkdown,
 } from '../remark';
 import { GitDBFormula } from './formula';
-import { WorkSheet, utils } from 'xlsx';
+import { WorkSheet, utils, CellObject } from 'xlsx';
 import { ConfigParams } from 'hyperformula';
 import { IAggregateResponse } from '../interfaces/aggregateResponse';
 import { IAggregateQueryResponse } from '../interfaces/aggregateQueryResponse';
@@ -219,14 +219,12 @@ export class GitDBIndex {
     table: string,
     paths: string[]
   ): Promise<IAggregateResponse> {
-    const aggregates = await this.mongo
-      .model<IFileNode>('FileNode')
-      .find({
-        table,
-        path: { $in: paths },
-        indexingVersion: GitDBIndex.indexingVersion,
-        value: { $exists: true },
-      });
+    const aggregates = await this.mongo.model<IFileNode>('FileNode').find({
+      table,
+      path: { $in: paths },
+      indexingVersion: GitDBIndex.indexingVersion,
+      value: { $exists: true },
+    });
     GitDB.collectionSort(aggregates, 'file');
     const aggregatesByFile: { [file: string]: { [path: string]: any } } = {};
     for (const aggregate of aggregates) {
@@ -243,14 +241,12 @@ export class GitDBIndex {
     table: string,
     path: string
   ): Promise<IFileNode[]> {
-    const aggregates = await this.mongo
-      .model<IFileNode>('FileNode')
-      .find({
-        table,
-        path,
-        indexingVersion: GitDBIndex.indexingVersion,
-        value: { $exists: true },
-      });
+    const aggregates = await this.mongo.model<IFileNode>('FileNode').find({
+      table,
+      path,
+      indexingVersion: GitDBIndex.indexingVersion,
+      value: { $exists: true },
+    });
     GitDB.collectionSort(aggregates, 'file');
     return aggregates;
   }
@@ -706,11 +702,15 @@ export class GitDBIndex {
       ...viewRoot.options.formula,
     };
     let viewData = await this.gitDb.index.getCondensedView(table);
+    // extract formatting from cell values (!&&{format}&&{value})
     const formatting = GitDBFormula.getFormulaFormatting(viewData);
+    // replace special values like {{CURRENT_ROW}}
     viewData = GitDBFormula.performDataSubstitutions(viewData);
+    // calculate cell formulas
     viewData = GitDBFormula.calculateDataFormulas(viewData, formulaOptions);
+    // get an excel sheet
     const sheet = utils.aoa_to_sheet(viewData, viewRoot.options.sheet);
-    // perform formatting
+    // perform formatting using the extracted formatting
     formatting.forEach((row, rowIndex) => {
       row.forEach((formatting, colIndex) => {
         if (formatting) {
@@ -719,6 +719,15 @@ export class GitDBIndex {
         }
       });
     });
+    // Apply bold font style to the first row (header row)
+    // apparently this only works in the SheetJS Pro version?!
+    const headerRange = utils.decode_range(sheet['!ref']);
+    for (let colIndex = headerRange.s.c; colIndex <= headerRange.e.c; colIndex++) {
+        const headerCellAddress = utils.encode_cell({ r: headerRange.s.r, c: colIndex });
+        const cell: CellObject = sheet[headerCellAddress] || {};
+        cell.s = { font: { bold: true } }; // Apply bold font style
+        sheet[headerCellAddress] = cell;
+    }
     return sheet;
   }
 }
