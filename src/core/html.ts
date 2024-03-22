@@ -1,21 +1,18 @@
-import { GitDBFormula } from "./formula";
-import { AOA2SheetOpts, utils, Sheet2HTMLOpts } from 'xlsx';
+import { Sheet2HTMLOpts, utils} from 'xlsx';
 import { GitDB } from "./gitdb";
-import { ConfigParams } from "hyperformula";
 
 export abstract class GitDBHtml {
     private constructor() {
         // Private constructor to prevent instantiation
     }
 
-    public static async getTableAsHtml(gitDb: GitDB, table: string, formulaOptions?: Partial<ConfigParams>, sheetOptions?: AOA2SheetOpts, htmlOptions?: Sheet2HTMLOpts): Promise<string> {
-        if (!gitDb.hasViewJson(table)) {
-            throw new Error(`Table ${table} does not exist`);
+    public static async getTableAsHtml(gitDb: GitDB, table: string): Promise<string> {
+        const viewRoot = gitDb.getViewJson(table);
+        const sheet = await gitDb.index.getViewSheet(table);
+        const htmlOptions: Sheet2HTMLOpts = {
+            header: `<html><head><meta charset="utf-8"/><title>${table}</title></head><body><h1>${table}</h1><br />`,
+            ...viewRoot.options.html
         }
-        let viewData = await gitDb.index.getCondensedView(table);
-        viewData = GitDBFormula.performDataSubstitutions(viewData);
-        viewData = GitDBFormula.calculateDataFormulas(viewData, formulaOptions);
-        const sheet = utils.aoa_to_sheet(viewData, sheetOptions);
         return utils.sheet_to_html(sheet, htmlOptions);
     }
 }

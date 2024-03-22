@@ -13,6 +13,9 @@ import {
   getRemarkToHtml,
   getRemarkToMarkdown,
 } from '../remark';
+import { GitDBFormula } from './formula';
+import { WorkSheet, utils } from 'xlsx';
+import { ConfigParams } from 'hyperformula';
 import { IAggregateResponse } from '../interfaces/aggregateResponse';
 import { IAggregateQueryResponse } from '../interfaces/aggregateQueryResponse';
 import { IViewResponse } from '../interfaces/viewResponse';
@@ -108,7 +111,7 @@ export class GitDBIndex {
     console.log(`Clearing indices for missing files`);
     const tableNames = this.gitDb.getTables();
     for (const tableName of tableNames) {
-      console.log(`Clearing indices for missing files in ${tableName}`)
+      console.log(`Clearing indices for missing files in ${tableName}`);
       const fileNames = this.gitDb.getTableFiles(tableName);
       // delete indices where file is not in fileNames
       await this.mongo.model<IFileIndex>('FileIndex').deleteMany({
@@ -212,25 +215,42 @@ export class GitDBIndex {
     await this.clearIndicesForMissingFiles();
   }
 
-  public async getAggregateForTableByFile(table: string, paths: string[]): Promise<IAggregateResponse> {
+  public async getAggregateForTableByFile(
+    table: string,
+    paths: string[]
+  ): Promise<IAggregateResponse> {
     const aggregates = await this.mongo
       .model<IFileNode>('FileNode')
-      .find({ table, path: { $in: paths }, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } });
+      .find({
+        table,
+        path: { $in: paths },
+        indexingVersion: GitDBIndex.indexingVersion,
+        value: { $exists: true },
+      });
     GitDB.collectionSort(aggregates, 'file');
     const aggregatesByFile: { [file: string]: { [path: string]: any } } = {};
     for (const aggregate of aggregates) {
       if (!aggregatesByFile[aggregate.file]) {
         aggregatesByFile[aggregate.file] = {};
       }
-      aggregatesByFile[aggregate.file][aggregate.path] = aggregate.value.trim() ?? null;
+      aggregatesByFile[aggregate.file][aggregate.path] =
+        aggregate.value.trim() ?? null;
     }
     return aggregatesByFile;
   }
 
-  public async getPathAggregateForTable(table: string, path: string): Promise<IFileNode[]> {
+  public async getPathAggregateForTable(
+    table: string,
+    path: string
+  ): Promise<IFileNode[]> {
     const aggregates = await this.mongo
       .model<IFileNode>('FileNode')
-      .find({ table, path, indexingVersion: GitDBIndex.indexingVersion, value: { $exists: true } });
+      .find({
+        table,
+        path,
+        indexingVersion: GitDBIndex.indexingVersion,
+        value: { $exists: true },
+      });
     GitDB.collectionSort(aggregates, 'file');
     return aggregates;
   }
@@ -346,13 +366,11 @@ export class GitDBIndex {
     table: string,
     includeNonData = false
   ): Promise<IFileIndex[]> {
-    const results = await this.mongo
-      .model<IFileIndex>('FileIndex')
-      .find({
-        indexingVersion: GitDBIndex.indexingVersion,
-        table,
-        ...(includeNonData ? {} : { data: true }),
-      });
+    const results = await this.mongo.model<IFileIndex>('FileIndex').find({
+      indexingVersion: GitDBIndex.indexingVersion,
+      table,
+      ...(includeNonData ? {} : { data: true }),
+    });
     GitDB.collectionSort(results, 'file');
     return results;
   }
@@ -362,7 +380,10 @@ export class GitDBIndex {
    * @param table The table to get the files for.
    * @returns An array of file names.
    */
-  public async getTableFiles(table: string, dataOnly = false): Promise<string[]> {
+  public async getTableFiles(
+    table: string,
+    dataOnly = false
+  ): Promise<string[]> {
     const query = {
       table,
       indexingVersion: GitDBIndex.indexingVersion,
@@ -619,8 +640,14 @@ export class GitDBIndex {
     return rows;
   }
 
-  public async getPathAggregateQueryResponse(table: string, path: string): Promise<IAggregateQueryResponse[]> {
-    const aggregate: IFileNode[] = await this.getPathAggregateForTable(table, path);
+  public async getPathAggregateQueryResponse(
+    table: string,
+    path: string
+  ): Promise<IAggregateQueryResponse[]> {
+    const aggregate: IFileNode[] = await this.getPathAggregateForTable(
+      table,
+      path
+    );
     const response: IAggregateQueryResponse[] = [];
     for (const fileNode of aggregate) {
       response.push({
@@ -632,17 +659,22 @@ export class GitDBIndex {
   }
 
   public async getPathsForTable(table: string): Promise<string[]> {
-    const paths = await this.mongo.model<IFileNode>('FileNode').distinct('path', {
-      table,
-      indexingVersion: GitDBIndex.indexingVersion,
-    });
+    const paths = await this.mongo
+      .model<IFileNode>('FileNode')
+      .distinct('path', {
+        table,
+        indexingVersion: GitDBIndex.indexingVersion,
+      });
     return paths;
   }
 
   public async getRenderedView(table: string): Promise<IViewResponse> {
     const viewJson: IViewRoot = await this.gitDb.getViewJson(table);
     const paths: string[] = this.gitDb.getViewPathsFromViewRoot(viewJson);
-    const aggregate: IAggregateResponse = await this.getAggregateForTableByFile(table, paths);
+    const aggregate: IAggregateResponse = await this.getAggregateForTableByFile(
+      table,
+      paths
+    );
     const response: IViewResponse = this.buildViewFromViewRootAndAggregates(
       viewJson,
       aggregate
@@ -653,11 +685,40 @@ export class GitDBIndex {
   public async getCondensedView(table: string): Promise<string[][]> {
     const viewJson: IViewRoot = await this.gitDb.getViewJson(table);
     const paths: string[] = this.gitDb.getViewPathsFromViewRoot(viewJson);
-    const aggregate: IAggregateResponse = await this.getAggregateForTableByFile(table, paths);
+    const aggregate: IAggregateResponse = await this.getAggregateForTableByFile(
+      table,
+      paths
+    );
     const response: IViewResponse = this.buildViewFromViewRootAndAggregates(
       viewJson,
       aggregate
     );
     return this.condenseViewResponse(viewJson, response);
+  }
+
+  public async getViewSheet(table: string): Promise<WorkSheet> {
+    if (!this.gitDb.hasViewJson(table)) {
+      throw new Error(`Table ${table} does not exist`);
+    }
+    const viewRoot = this.gitDb.getViewJson(table);
+    const formulaOptions: Partial<ConfigParams> = {
+      licenseKey: 'gpl-v3',
+      ...viewRoot.options.formula,
+    };
+    let viewData = await this.gitDb.index.getCondensedView(table);
+    const formatting = GitDBFormula.getFormulaFormatting(viewData);
+    viewData = GitDBFormula.performDataSubstitutions(viewData);
+    viewData = GitDBFormula.calculateDataFormulas(viewData, formulaOptions);
+    const sheet = utils.aoa_to_sheet(viewData, viewRoot.options.sheet);
+    // perform formatting
+    formatting.forEach((row, rowIndex) => {
+      row.forEach((formatting, colIndex) => {
+        if (formatting) {
+          const cellAddress = utils.encode_cell({ r: rowIndex, c: colIndex });
+          utils.cell_set_number_format(sheet[cellAddress], formatting);
+        }
+      });
+    });
+    return sheet;
   }
 }

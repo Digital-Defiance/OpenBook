@@ -115,6 +115,8 @@ There are options to locate the date at a subdirectory within each of the reposi
 * Basic indexing into a collection of remark Node objects
 * Support inserting the index data into mongo
 * Improve change detection/mongo insertion
+* HTML and Excel rendering of table views
+* Formula support in HTML views
 
 ### In Progress
 
@@ -124,10 +126,8 @@ There are options to locate the date at a subdirectory within each of the reposi
 ### TODO
 
 * Support storing basic markdown data through query
-* Support encryption of data
+* Support encryption of data at rest, to be decrypted by the node engine
 * Support Git WebHooks to notify OpenBook of changes
-* Support multiple views
-* Consider emulating Excel formulas and other support in views without excel so that views with excel make sense, such as a transaction with a computed total based on a quantity and amount, or a _bottom.md with a sum or other totaling mechanism. They render well in Excel, but when queried through the API, they are less useful.
 
 ## Authors, License
 

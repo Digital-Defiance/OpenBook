@@ -1,5 +1,6 @@
 import { ConfigParams, HyperFormula } from "hyperformula";
 import { IBaseVariables } from '../interfaces/baseVariables';
+import { FormattedFormula } from '../interfaces/formattedFormula';
 
 export abstract class GitDBFormula {
     private constructor() {
@@ -89,6 +90,22 @@ export abstract class GitDBFormula {
         return formula;
     }
 
+    public static getFormulaFormatting(inputData: string[][]): string[][] {
+        const result: string[][] = [];
+        inputData.forEach((row, rowIndex) => {
+            result[rowIndex] = [];
+            row.forEach((cell, colIndex) => {
+                let cellData = '';
+                if (cell.startsWith('!&&')) {
+                    const cellFormatResult = GitDBFormula.extractFormattingFromFormula(cell);
+                    cellData = cellFormatResult.formatting ?? '';
+                }
+                result[rowIndex][colIndex] = cellData;
+            });
+        });
+        return result;
+    }
+
     /**
      * Perform variable substitutions on the input data and return the result.
      * @param inputData The input data to perform substitutions on
@@ -155,7 +172,7 @@ export abstract class GitDBFormula {
      * eg !&&"$"#,##0.00&&=A1
      * @param formula The formula to extract formatting from
      */
-    public static extractFormattingFromFormula(formula: string): { formula: string, formatting?: string } {
+    public static extractFormattingFromFormula(formula: string): FormattedFormula {
         const matches = formula.match(/^!&&(.+?)&&(.+)$/);
         if (matches && matches.length === 3) {
             return { formula: matches[2], formatting: matches[1] };

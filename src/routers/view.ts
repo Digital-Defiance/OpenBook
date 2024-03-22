@@ -1,4 +1,3 @@
-import exceljs from 'exceljs';
 import { Router } from 'express';
 import { GitDB } from '../core/gitdb';
 import { GitDBExcel } from '../core/excel';
@@ -31,22 +30,15 @@ export function getRouter(gitDb: GitDB) {
       'Content-Disposition',
       'attachment; filename=' + `${table}.xlsx`
     );
-    const workbook = new exceljs.stream.xlsx.WorkbookWriter({
-      stream: res,
-      useStyles: true,
-      useSharedStrings: true,
-    });
-    await GitDBExcel.getViewAsExcel(gitDb, table, workbook);
-    await workbook.commit();
+    const excelBuffer = await GitDBExcel.getViewAsExcel(gitDb, table);
+    res.send(excelBuffer);
   });
 
   viewRouter.get('/:table/html', async (req, res) => {
     const table = req.params.table;
     res.setHeader('Content-Type', 'text/html');
-    const html = await GitDBHtml.getTableAsHtml(gitDb, table, {
-      licenseKey: 'gpl-v3'
-    });
-    res.send(`<html><head><title>${table}</title><body>${html}</body></html>`);
+    const html = await GitDBHtml.getTableAsHtml(gitDb, table);
+    res.send(html);
   });
 
   viewRouter.get('/:table/condensed', async (req, res) => {
